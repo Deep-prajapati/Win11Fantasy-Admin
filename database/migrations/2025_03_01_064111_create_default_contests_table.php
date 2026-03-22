@@ -28,6 +28,7 @@ return new class extends Migration
             $table->integer('extra_cash')->default(0);
             $table->boolean('bonus_contest')->nullable();
             $table->integer('usable_bonus')->default(10);
+            $table->tinyInteger('is_deleted')->default(0)->comment('0=active,1=deleted');
             $table->softDeletes();
             $table->timestamps();
         });

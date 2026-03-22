@@ -88,7 +88,9 @@ class DefaultContestPriceBreakupSeeder extends Seeder
                 ],
             ],
         ];
-        foreach ($defaultContests as $key => $contest) {
+        
+        foreach ($defaultContests as $key => $contest) 
+        {
             DefaultContest::updateOrCreate(['id' => $contest['id'],'contest_type'=>$contest['contest_type']], [
                 'mrp' => $contest['mrp'],
                 'entry_fees'=> $contest['entry_fees'],
@@ -101,7 +103,9 @@ class DefaultContestPriceBreakupSeeder extends Seeder
                 'is_free' => $contest['is_free'] == 1,
                 'usable_bonus' => $contest['usable_bonus'],
             ]);
-            foreach ($contest['prize_breakup'] as $price) {
+
+            foreach ($contest['prize_breakup'] as $price) 
+            {
                 PrizeBreakup::updateOrCreate([
                     'default_contest_id' => $contest['id'],
                     'rank_from' => $price['rank_from'],

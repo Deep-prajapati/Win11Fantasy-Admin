@@ -34,7 +34,7 @@ class MatchController extends Controller
         } else {
             $matches = $matches->finished();
         }
-        $matches = $matches->where('status', 'NS');
+        // $matches = $matches->where('status', 'NS');
         // $matches = $matches->whereIn('fixtures.season_id',[6,24,44,185,309,312,498,507,782,1058,1292,1427,1648,1657,10,104,107,110,324,450,453,525,830,1079,1349,1624,15,188,191,648,986,1145,1496,1636]);
         $matches = $matches->join('leagues', 'fixtures.league_id', '=', 'leagues.league_id');
         $matches =  $matches->select(

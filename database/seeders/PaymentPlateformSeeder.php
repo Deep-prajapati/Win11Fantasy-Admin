@@ -16,7 +16,9 @@ class PaymentPlateformSeeder extends Seeder
         $plateforms = [
             ['name' => 'BankTransfer', 'image' => 'assets/payments/bank-transfer.png','enabled'=>true],
         ];
-        foreach ($plateforms as $key => $value) {
+        
+        foreach ($plateforms as $key => $value) 
+        {
             PaymentPlateform::updateOrCreate($value,$value);
         }
     }

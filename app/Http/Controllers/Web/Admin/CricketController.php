@@ -24,11 +24,13 @@ class CricketController extends Controller
         $title = "Cricket Matches";
         return view('cricket.matches.index', compact('title'));
     }
+
     public function leagues(Request $request)
     {
         $title = "Cricket Leagues";
         return view('cricket.leagues', compact('title'));
     }
+
     // public function cancelMatch(Request $request, $fixture_id)
     // {
     //     $match =  Fixture::where(['fixture_id' => $fixture_id, 'is_live' => false, 'is_cancelled' => false])->first();
@@ -41,6 +43,7 @@ class CricketController extends Controller
     //     flash()->success('Match cancelled successfully.');
     //     return redirect()->route('admin.cricket.matches');
     // }
+
     public function matchContests(Request $request, $fixture_id)
     {
         $match =  Fixture::where('fixture_id', $fixture_id)->first();
@@ -54,6 +57,7 @@ class CricketController extends Controller
         $moreContests = DefaultContest::where(['is_cloneable' => false])->whereNotin('id', $alreadyContest)->with('contestType')->get();
         return view('cricket.matches.contest_list', compact('title', 'match', 'moreContests'));
     }
+
     public function matchContestAddManual(Request $request, $fixture_id)
     {
         $match =  Fixture::where('fixture_id', $fixture_id)->first();
@@ -68,9 +72,9 @@ class CricketController extends Controller
         if ($validator->fails()) {
             return Helper::EmptyReturn($validator->errors()->first());
         }
-$defContests = DefaultContest::whereIn('id', $request->contests)
-    ->where('is_deleted', '!=', 1)
-    ->get();
+        $defContests = DefaultContest::whereIn('id', $request->contests)
+            ->where('is_deleted', '!=', 1)
+            ->get();
 
         DB::transaction(function () use ($defContests, $fixture_id) {
             foreach ($defContests as $contest) {
@@ -112,6 +116,7 @@ $defContests = DefaultContest::whereIn('id', $request->contests)
         });
         return Helper::SuccessReturn(null, 'Contest added successfully.');
     }
+
     public function matchContestView(Request $request, $fixture_id, $contest_id)
     {
 
@@ -133,6 +138,7 @@ $defContests = DefaultContest::whereIn('id', $request->contests)
 
         return view('cricket.matches.contest_view', compact('title', 'match', 'contest', 'joinedUsers', 'totalWinnings', 'totalEntryAmount'));
     }
+
     public function getseasons(Request $request)
     {
         if (isset($request->league)) {
@@ -142,6 +148,7 @@ $defContests = DefaultContest::whereIn('id', $request->contests)
         }
         return Helper::SuccessReturn($seasons, 'data fatched');
     }
+
     public function defaultContest(Request $request)
     {
         $title = "Default Contest";
@@ -151,6 +158,7 @@ $defContests = DefaultContest::whereIn('id', $request->contests)
         $contests = $contests->paginate(env('PER_PAGE_RECORDS', 10));
         return view('cricket.contests.index', compact('title', 'contests'));
     }
+
     public function defaultContestView(Request $request, $contest_id)
     {
         $title = "Default Contest View";
@@ -209,6 +217,7 @@ $defContests = DefaultContest::whereIn('id', $request->contests)
             ->paginate(env('PER_PAGE_RECORDS', 10));
         return view('cricket.contests.view', compact('title', 'contest', 'usercontests'));
     }
+
     public function defaultContestEdit(Request $request, $contest_id)
     {
         $title = "Default Contest Edit";
@@ -283,6 +292,7 @@ $defContests = DefaultContest::whereIn('id', $request->contests)
         $contest_types = ContestType::where('is_deleted', false)->get();
         return view('cricket.contests.edit', compact('title', 'contest', 'contest_types'));
     }
+
     public function defaultContestAdd(Request $request)
     {
         if ($request->isMethod('POST')) {
@@ -348,11 +358,13 @@ $defContests = DefaultContest::whereIn('id', $request->contests)
             return view('cricket.contests.add', compact('title', 'contest_types'));
         }
     }
+
     public function contestType(Request $request)
     {
         $title = "Contest Types";
         return view('cricket.contest_type.index', compact('title'));
     }
+
     public function contestTypeAdd(Request $request)
     {
         if ($request->isMethod('POST')) {

@@ -31,7 +31,7 @@ class LeaguesShow extends Component
     }
     public function render()
     {
-        $leagues = League::orderBy($this->sortColumn, $this->sortDirection)->paginate(env('PER_PAGE_RECORDS',10));
+        $leagues = League::orderBy($this->sortColumn, $this->sortDirection)->paginate(env('PER_PAGE_RECORDS',10))->withPath(request()->url());
         return view('livewire.cricket.leagues-show',[
             'leagues' => $leagues,
         ]);

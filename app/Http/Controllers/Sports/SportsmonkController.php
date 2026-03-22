@@ -822,12 +822,14 @@ $isLive = function ($match, $data) {
             // $players = Player::where('season_id',$match->season_id)->whereIn('team_id',[$match->localteam_id,$match->visitorteam_id])->;
         }
     }
+
     private function JoinBotUserInContest($match, $contest)
     {
         while (botsAllowedInContest($contest->match_id, $contest, $contest->contestType)) {
             $this->joinbotToContest($match, $contest);
         }
     }
+
     private function joinbotToContest($match, $contest)
     {
         $botUser = User::where('role', 3)->inRandomOrder()->first();
@@ -835,6 +837,7 @@ $isLive = function ($match, $data) {
             $this->createBotUserTeamAndJoin($match, $contest, $botUser);
         }
     }
+
     protected function createBotUserTeamAndJoin($match, $contest, $botUser)
     {
         $players = Player::where('season_id', $match->season_id)
@@ -872,6 +875,7 @@ $isLive = function ($match, $data) {
         }
         return true;
     }
+    
     public function resetBotsTeams()
     {
         $matches = Fixture::whereDate('starting_at', Carbon::today())

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('code');
             $table->string('image_path');
             $table->string('type');
+            $table->tinyInteger('status')->default(1)->comment('1=active,0=inactive');
             $table->timestamps();
         });
     }

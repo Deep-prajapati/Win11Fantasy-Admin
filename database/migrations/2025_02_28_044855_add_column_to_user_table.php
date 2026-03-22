@@ -29,7 +29,8 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([
                 'country_code',
-                'mobile_numer',
+                'mobile_number',
+                'image',
                 'is_banned',
                 'is_kyc_complete',
                 'role',

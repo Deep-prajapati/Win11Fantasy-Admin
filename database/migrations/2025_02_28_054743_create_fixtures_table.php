@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('fixtures', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('fixture_id')->unique()->comment('External API fixture ID');
+            $table->unsignedBigInteger('fixture_id')->unique()->comment('External API fixture ID');
             $table->bigInteger('league_id')->index();
             $table->bigInteger('season_id')->index();
             $table->bigInteger('stage_id')->nullable()->index();

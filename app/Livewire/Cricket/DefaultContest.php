@@ -52,7 +52,7 @@ public function onConfirmed(array $payload): void
     {
         $contests = ModelDefaultContest::query();
         $contests->with('contestType');
-        $contests = $contests->paginate(env('PER_PAGE_RECORDS', 10));
+        $contests = $contests->paginate(env('PER_PAGE_RECORDS', 10))->withPath(request()->url());
         return view('livewire.cricket.default-contest', [
             'contests' => $contests
         ]);

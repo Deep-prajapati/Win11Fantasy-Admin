@@ -24,9 +24,7 @@ Route::group(['as' => 'admin.'], function () {
         
         Route::get('settings',[AdminController::class,'settings'])->name('settings');
 
-
         // user routes
-
         Route::get('/tnxlist', [UsersController::class, 'tnxlist'])->name('tnxlist');
         Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
             Route::get('/', [UsersController::class, 'index'])->name('list');

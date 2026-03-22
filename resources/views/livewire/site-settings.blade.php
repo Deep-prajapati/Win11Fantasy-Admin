@@ -19,23 +19,32 @@
     </div>
 
     <div class="card mb-4">
-        <h5 class="card-header">Otpless Info</h5>
+        <h5 class="card-header">Whatsapp OTP Info</h5>
         <div class="card-body">
-            <form wire:submit.prevent="updateOtplessInfo">
+            <form wire:submit.prevent="updateOtpInfo">
                 <div class="row mb-2">
                     <div class="col-sm-6 mb-3">
-                        <label class="form-label">Client ID</label>
-                        <input type="text" class="form-control" wire:model.live="clientId" placeholder="Enter Client ID">
+                        <label class="form-label">Access Token</label>
+                        <input type="text" class="form-control" wire:model.live="accessToken" placeholder="Enter Access Token">
                     </div>
                     <div class="col-sm-6 mb-3">
-                        <label class="form-label">Client Secret</label>
-                        <input type="text" class="form-control" wire:model.live="clientSecret" placeholder="Enter Client Secret">
+                        <label class="form-label">Phone Number ID</label>
+                        <input type="number" class="form-control" wire:model.live="phoneid" placeholder="Enter Phone Number ID">
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <label class="form-label">Templete</label>
+                        <input type="text" class="form-control" wire:model.live="templete" placeholder="Enter Templete">
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <label class="form-label">Expired At</label>
+                        <input type="text" class="form-control" wire:model.live="expiredat" placeholder="Enter Expired At">
                     </div>
                 </div>
-                <button type="submit" class="btn btn-warning">Update Otpless Info</button>
+                <button type="submit" class="btn btn-warning">Update Otp Info</button>
             </form>
         </div>
     </div>
+
     <div class="card">
         <h5 class="card-header">Bonus Settings</h5>
         <div class="card-body">

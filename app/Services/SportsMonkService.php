@@ -8,7 +8,6 @@ use Illuminate\Http\Client\RequestException;
 
 class SportsMonkService
 {
-
     protected $apiKey;
     protected $baseUrl;
 
@@ -18,10 +17,10 @@ class SportsMonkService
         $this->baseUrl = 'https://cricket.sportmonks.com/api/v2.0';
     }
 
-
     protected function callApi($endpoint, $params = [])
     {
         $params['api_token'] = $this->apiKey;
+
         try {
             $response = Http::timeout(60)->get("{$this->baseUrl}/{$endpoint}", $params);
             if ($response->successful()) {
@@ -44,6 +43,7 @@ class SportsMonkService
             ];
         }
     }
+
     public function getfixtureall()
     {
         $time = now()->subDay()->toDateString();
@@ -56,6 +56,7 @@ class SportsMonkService
             'sort' => 'starting_at'
         ]);
     }
+
     public function getFixtureUpdates($FIXTURE_ID)
     {
         return $this->callApi("fixtures/$FIXTURE_ID", [
@@ -64,12 +65,14 @@ class SportsMonkService
             'sort' => 'starting_at'
         ]);
     }
+
     public function getfixturelineup($fixture_id)
     {
         return $this->callApi("fixtures/$fixture_id", [
             'include' => 'localTeam,visitorTeam,lineup',
         ]);
     }
+
     public function getfixtureBettingBolling($fixture_id)
     {
         return $this->callApi("fixtures/$fixture_id", [
@@ -84,12 +87,14 @@ class SportsMonkService
             // 'sort' => 'starting_at'
         ]);
     }
+
     public function getTeam($team_id)
     {
         return $this->callApi("teams/$team_id", [
             'include' => 'squad',
         ]);
     }
+
     public function getteamSquad($team_id, $season_id)
     {
         return $this->callApi("teams/$team_id/squad/$season_id", []);

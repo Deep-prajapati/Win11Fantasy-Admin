@@ -10,8 +10,10 @@ class SiteSettings extends Component
 {
     public $payment_upi_info;
     public $sportsmonk_api_key;
-    public $clientId;
-    public $clientSecret;
+    public $accessToken;
+    public $phoneid;
+    public $templete;
+    public $expiredat;
     public $refer_bonus;
     public $signup_bonus;
 
@@ -22,9 +24,11 @@ class SiteSettings extends Component
         $this->sportsmonk_api_key = SettingsModel::getValue('sportsmonk_api_key');
 
         // Get otpless info
-        $otplessInfo = json_decode(SettingsModel::getValue('otpless_info'), true);
-        $this->clientId = $otplessInfo['clientId'] ?? '';
-        $this->clientSecret = $otplessInfo['clientSecret'] ?? '';
+        $otpInfo = json_decode(SettingsModel::getValue('otp_info'), true);
+        $this->accessToken = $otpInfo['accessToken'] ?? '';
+        $this->phoneid = $otpInfo['phoneid'] ?? '';
+        $this->templete = $otpInfo['templete'] ?? '';
+        $this->expiredat = $otpInfo['expiredat'] ?? '';
 
         // Get bonuses
         $this->refer_bonus = SettingsModel::getValue('refer_bonus');
@@ -40,17 +44,19 @@ class SiteSettings extends Component
         Flasher::success('General settings updated successfully.');
     }
 
-    public function updateOtplessInfo()
+    public function updateOtpInfo()
     {
         // Save otpless info as JSON
         $json = json_encode([
-            'clientId' => $this->clientId,
-            'clientSecret' => $this->clientSecret,
+            'accessToken' => $this->accessToken,
+            'phoneid' => $this->phoneid,
+            'templete' => $this->templete,
+            'expiredat' => $this->expiredat,
         ]);
 
-        SettingsModel::updateOrCreate(['name' => 'otpless_info'], ['value' => $json]);
+        SettingsModel::updateOrCreate(['name' => 'otp_info'], ['value' => $json]);
 
-        Flasher::success('Otpless info updated successfully.');
+        Flasher::success('Otp info updated successfully.');
     }
 
     public function updateBonuses()

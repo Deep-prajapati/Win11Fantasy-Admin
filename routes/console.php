@@ -1,8 +1,58 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
+use App\Jobs\{
+    BotJoinContest,
+    CancleContest,
+    GetFixture,
+    CreateContest,
+    FootballCancleContest,
+    FootballCreateContest,
+    FootballMatches,
+    FootballPrizeDistribute,
+    FootBallSetPointsRank,
+    GeneratePoints,
+    GetBatBall,
+    GetLineUp,
+    GetTeams,
+    PrizeDistribute,
+    RankGenerate,
+    SetPointsRank,
+    UpdateFixture,
+};
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// ⏱️ HOURLY
+// Cricket
+Schedule::job(new GetFixture)->hourly()->withoutOverlapping();
+Schedule::job(new CreateContest)->hourly()->withoutOverlapping();
+// Schedule::job(new FootballMatches)->hourly()->withoutOverlapping();
+// Schedule::job(new FootballCreateContest)->hourly()->withoutOverlapping();
+
+
+// ⏱️ 5 Min
+Schedule::job(new RankGenerate)->everyFiveMinutes()->withoutOverlapping();
+Schedule::job(new PrizeDistribute)->everyFiveMinutes()->withoutOverlapping();
+// Schedule::job(new FootballPrizeDistribute)->everyFiveMinutes()->withoutOverlapping();
+
+
+// ⏱️ 2 Min
+Schedule::job(new BotJoinContest)->everyTwoMinutes()->withoutOverlapping();
+
+
+// every minute
+Schedule::job(new UpdateFixture)->everyMinute()->withoutOverlapping();
+Schedule::job(new GetTeams)->everyMinute()->withoutOverlapping();
+// Schedule::job(new FootballMatches)->everyMinute()->withoutOverlapping();
+// Schedule::job(new FootballCreateContest)->everyMinute()->withoutOverlapping();
+// Schedule::job(new FootballCreateContest)->everyMinute()->withoutOverlapping();
+
+// Schedule::job(new CancleContest)->everyMinute()->withoutOverlapping();
+// Schedule::job(new FootballCancleContest)->everyMinute()->withoutOverlapping();
+
+
+// every half minute
+// Schedule::job(new GetLineUp)->everyThirtySeconds()->withoutOverlapping();
+Schedule::job(new GetBatBall)->everyThirtySeconds()->withoutOverlapping();
+Schedule::job(new GeneratePoints)->everyThirtySeconds()->withoutOverlapping();
+Schedule::job(new SetPointsRank)->everyThirtySeconds()->withoutOverlapping();
+// Schedule::job(new FootBallSetPointsRank)->everyMinute()->withoutOverlapping();

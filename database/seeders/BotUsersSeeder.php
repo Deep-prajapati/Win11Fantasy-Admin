@@ -20,7 +20,8 @@ class BotUsersSeeder extends Seeder
 
         $botUsers = [];
 
-        foreach ($botNames as $name) {
+        foreach ($botNames as $name) 
+        {
             $botUsers[] = [
                 'name' => $name,
                 'email' => Str::lower($name) . '@bot.com',

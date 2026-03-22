@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('otp_token' , 10)->nullable();
-            $table->dateTime('otp_expired_at')->nullable();
+        Schema::create('site_settings', function (Blueprint $table) {
+            $table->id(); // bigint UNSIGNED + auto increment
+            $table->string('name');
+            $table->text('value')->nullable();
+            $table->timestamps(); // created_at, updated_at
         });
     }
 
@@ -22,9 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->drop('otp_token');
-            $table->drop('otp_expired_at');
-        });
+        Schema::dropIfExists('site_settings');
     }
 };
