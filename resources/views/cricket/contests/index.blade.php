@@ -1,0 +1,10 @@
+@extends('layouts.app')
+@section('styles')
+    @livewireStyles()
+@endsection
+@section('scripts')
+    @livewireScripts()
+@endsection
+@section('contents')
+    @livewire('cricket.defaultContest')
+@endsection

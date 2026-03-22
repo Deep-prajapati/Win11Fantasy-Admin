@@ -1,0 +1,233 @@
+// public function getTeams()
+    // {
+    //     return response()->stream(function () {
+    //         ob_start(); // Start output buffering
+
+    //         echo "Processing started...\n";
+    //         ob_flush();
+    //         flush();
+
+    //         // Process fixtures in chunks
+    //         Fixture::select('localteam_id', 'fixture_id', 'visitorteam_id', 'season_id')
+    //             // ->where('live', false)
+    //             // ->whereDate('starting_at', '>=', Carbon::yesterday())
+    //             // ->whereDate('starting_at', '<', Carbon::today()->addDays(7))
+    //             ->chunk(10, function ($matches) {
+    //                 foreach ($matches as $match) {
+    //                     $teamIds = [$match->localteam_id, $match->visitorteam_id];
+    //                     $playersData = [];
+
+    //                     foreach ($teamIds as $teamId) {
+    //                         $teamDetails = $this->apiservice->getteamSquad($teamId, $match->season_id);
+
+    //                         if (!isset($teamDetails['data']['squad'])) {
+    //                             continue; // Skip if no squad data
+    //                         }
+
+    //                         foreach ($teamDetails['data']['squad'] as $data) {
+    //                             $playersData[] = [
+    //                                 'player_id' => $data['id'],
+    //                                 'team_id' => $teamId,
+    //                                 'match_id' => $match->fixture_id,
+    //                                 'country_id' => $data['country_id'],
+    //                                 'firstname' => $data['firstname'],
+    //                                 'lastname' => $data['lastname'],
+    //                                 'fullname' => $data['fullname'],
+    //                                 'image_path' => $data['image_path'],
+    //                                 'dateofbirth' => $data['dateofbirth'],
+    //                                 'gender' => $data['gender'],
+    //                                 'battingstyle' => $data['battingstyle'],
+    //                                 'bowlingstyle' => $data['bowlingstyle'],
+    //                                 'position_id' => $data['position']['id'],
+    //                                 'position_name' => $data['position']['name'],
+    //                                 'updated_at' => now(),
+    //                             ];
+    //                         }
+    //                     }
+
+    //                     // **Bulk Insert or Update for Unique Constraint (player_id, team_id, match_id)**
+    //                     if (!empty($playersData)) {
+    //                         DB::transaction(function () use ($playersData) {
+    //                             Player::upsert(
+    //                                 $playersData,
+    //                                 ['player_id', 'team_id', 'match_id'],
+    //                                 ['fullname', 'image_path', 'battingstyle', 'bowlingstyle', 'position_id', 'position_name', 'updated_at']
+    //                             );
+    //                         });
+    //                     }
+
+    //                     echo "Processed match ID: {$match->fixture_id}\n";
+    //                     ob_flush();
+    //                     flush();
+    //                 }
+    //             });
+
+    //         echo "All data fetched and updated successfully\n";
+    //         ob_flush();
+    //         flush();
+    //     }, 200, [
+    //         'Content-Type' => 'text/plain',
+    //         'Cache-Control' => 'no-cache, must-revalidate',
+    //         'X-Accel-Buffering' => 'no', // Prevents buffering in some servers like Nginx
+    //         'Transfer-Encoding' => 'chunked',
+    //     ]);
+    // }
+    // public function getTeams()
+    // {
+    //     try {
+    //         // Fetch all fixtures
+    //         $matches = Fixture::select('localteam_id', 'fixture_id', 'visitorteam_id', 'season_id')
+    //             ->where('live', false)
+    //             ->whereDate('starting_at', '>=', Carbon::yesterday())
+    //             ->whereDate('starting_at', '<', Carbon::today()->addDays(7))
+    //             ->orderBy('id', 'asc') // Order by ID (ascending)
+    //             // ->skip(2)
+    //             ->take(2) // Take the first 2 records
+    //             ->get();
+
+    //         $totalMatches = $matches->count();
+    //         $processedMatches = 0;
+    //         $totalPlayersInserted = 0;
+
+    //         Log::info("Starting team data fetch. Total matches: {$totalMatches}");
+
+    //         foreach ($matches as $match) {
+    //             try {
+    //                 $teamIds = [$match->localteam_id, $match->visitorteam_id];
+    //                 $matchPlayersData = [];
+
+    //                 foreach ($teamIds as $teamId) {
+    //                     try {
+    //                         // Add more detailed logging for API call
+    //                         Log::info("Fetching squad for team {$teamId}, match {$match->fixture_id}");
+
+    //                         $teamDetails = $this->apiservice->getteamSquad($teamId, $match->season_id);
+
+    //                         // Debug: Log the structure of team details
+    //                         Log::debug('Team Squad Details', [
+    //                             'team_id' => $teamId,
+    //                             'match_id' => $match->fixture_id,
+    //                             'squad_exists' => isset($teamDetails['data']['squad']),
+    //                             'squad_count' => isset($teamDetails['data']['squad']) ? count($teamDetails['data']['squad']) : 0
+    //                         ]);
+
+    //                         if (!isset($teamDetails['data']['squad'])) {
+    //                             Log::warning("No squad data for team {$teamId} in match {$match->fixture_id}");
+    //                             continue;
+    //                         }
+
+    //                         $teamPlayers = $this->extractPlayerData($teamDetails['data']['squad'], $teamId, $match->fixture_id);
+    //                         $matchPlayersData = array_merge($matchPlayersData, $teamPlayers);
+    //                     } catch (\Exception $teamError) {
+    //                         Log::error("Failed to fetch squad for team {$teamId} in match {$match->fixture_id}: " . $teamError->getMessage());
+    //                     }
+    //                 }
+
+    //                 // Bulk upsert players for this match
+    //                 if (!empty($matchPlayersData)) {
+    //                     $insertedCount = $this->bulkUpsertPlayers($matchPlayersData);
+    //                     $totalPlayersInserted += $insertedCount;
+
+    //                     Log::info("Processed match {$match->fixture_id}: Inserted {$insertedCount} players");
+    //                 } else {
+    //                     Log::warning("No players data for match {$match->fixture_id}");
+    //                 }
+
+    //                 $processedMatches++;
+    //             } catch (\Exception $matchError) {
+    //                 Log::error("Failed to process match {$match->fixture_id}: " . $matchError->getMessage());
+    //             }
+    //         }
+
+    //         Log::info("Team data fetch completed. Processed {$processedMatches} matches. Total players inserted: {$totalPlayersInserted}");
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'total_matches' => $totalMatches,
+    //             'processed_matches' => $processedMatches,
+    //             'total_players_inserted' => $totalPlayersInserted,
+    //             'message' => 'Team data successfully fetched and updated'
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         Log::error('Critical error in team data fetch: ' . $e->getMessage());
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to fetch team data',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+
+
+private function extractPlayerData(array $squadData, int $teamId, int $matchId): array
+    {
+        return array_filter(array_map(function ($data) use ($teamId, $matchId) {
+            // Add additional validation to ensure all required fields exist
+            if (!$this->validatePlayerData($data)) {
+                Log::warning("Invalid player data", [
+                    'team_id' => $teamId,
+                    'match_id' => $matchId,
+                    'player_data' => $data
+                ]);
+                return null;
+            }
+
+            return [
+                'player_id' => $data['id'],
+                'team_id' => $teamId,
+                'match_id' => $matchId,
+                'country_id' => $data['country_id'] ?? null,
+                'firstname' => $data['firstname'] ?? '',
+                'lastname' => $data['lastname'] ?? '',
+                'fullname' => $data['fullname'] ?? '',
+                'image_path' => $data['image_path'] ?? '',
+                'dateofbirth' => $data['dateofbirth'] ?? null,
+                'gender' => $data['gender'] ?? '',
+                'battingstyle' => $data['battingstyle'] ?? '',
+                'bowlingstyle' => $data['bowlingstyle'] ?? '',
+                'position_id' => $data['position']['id'] ?? null,
+                'position_name' => $data['position']['name'] ?? '',
+                'updated_at' => now(),
+            ];
+        }, $squadData));
+    }
+
+    private function validatePlayerData(array $data): bool
+    {
+        // Validate essential player data
+        return isset($data['id']) &&
+            isset($data['position']) &&
+            is_array($data['position']);
+    }
+
+    private function bulkUpsertPlayers(array $playersData): int
+    {
+        if (empty($playersData)) {
+            Log::warning('No players data to upsert');
+            return 0;
+        }
+
+        try {
+            $insertedCount = DB::transaction(function () use ($playersData) {
+                return Player::upsert(
+                    $playersData,
+                    ['player_id', 'team_id', 'match_id'],
+                    ['fullname', 'image_path', 'battingstyle', 'bowlingstyle', 'position_id', 'position_name', 'updated_at']
+                );
+            });
+
+            Log::info('Players upserted successfully', [
+                'total_players' => count($playersData),
+                'inserted_count' => $insertedCount
+            ]);
+
+            return $insertedCount;
+        } catch (\Exception $e) {
+            Log::error("Bulk upsert failed: " . $e->getMessage(), [
+                'players_data_count' => count($playersData)
+            ]);
+            throw $e;
+        }
+    }

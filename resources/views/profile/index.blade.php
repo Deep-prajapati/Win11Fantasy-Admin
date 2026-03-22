@@ -1,0 +1,10 @@
+@extends('layouts.app')
+@section('styles')
+    @livewireStyles
+@endsection
+@section('contents')
+    @livewire('admin-profile')
+@endsection
+@section('scripts')
+    @livewireScripts
+@endsection

@@ -1,0 +1,10 @@
+@extends('layouts.app')
+@section('styles')
+    @livewireStyles
+@endsection
+@section('contents')
+@livewire('football.leaguesShow')
+@endsection
+@section('scripts')
+    @livewireScripts
+@endsection
