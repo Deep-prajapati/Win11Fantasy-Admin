@@ -7,9 +7,8 @@
             <div class="app-brand justify-content-center">
                 <a href="{{env('MAIN_APP_DOMAIN')}}" class="app-brand-link gap-2">
                     <span class="app-brand-logo demo">
-                        <img src="{{asset('assets/logo.png')}}" alt="logo.." srcset="">
+                        <img src="{{asset('assets/logo.svg')}}" alt="logo.." srcset="">
                     </span>
-                    <span class="app-brand-text demo text-body fw-bolder">{{env('APP_NAME')}}</span>
                 </a>
             </div>
             <!-- /Logo -->
@@ -44,7 +43,7 @@
                     </div>
                 </div>
                 <div class="mb-3">
-                    <button class="btn btn-primary d-grid w-100" type="submit">Sign in</button>
+                    <button class="btn btn-danger d-grid w-100" type="submit">Sign in</button>
                 </div>
             </form>
         </div>

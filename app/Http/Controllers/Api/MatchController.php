@@ -2,36 +2,41 @@
 
 namespace App\Http\Controllers\Api;
 
-use Carbon\Carbon;
-use App\Models\Player;
+use App\Models\{
+    Batting,
+    Bowling,
+    Contest,
+    Fixture,
+    JoinCrickContest,
+    PrizeBreakup,
+    Player,
+    Playing11,
+    UserTeam,
+    Transection,
+};
 use App\Helpers\Helper;
-use App\Models\Batting;
-use App\Models\Bowling;
-use App\Models\Contest;
-use App\Models\Fixture;
-use App\Models\UserTeam;
-use App\Models\Playing11;
-use App\Models\Transection;
-use App\Models\PrizeBreakup;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use App\Models\JoinCrickContest;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Symfony\Component\HttpKernel\Event\RequestEvent;
 
 class MatchController extends Controller
 {
     public function index(Request $request, $status)
     {
         $matches = Fixture::query();
-        if ($status == 'live') {
+
+        if ($status == 'live') 
+        {
             $matches = $matches->live();
-        } else if ($status == 'upcoming') {
+        } 
+        else if ($status == 'upcoming') 
+        {
             $matches = $matches->upcoming();
-        } else {
+        } 
+        else 
+        {
             $matches = $matches->finished();
         }
         // $matches = $matches->where('status', 'NS');

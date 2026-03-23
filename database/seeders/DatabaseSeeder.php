@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\ContestType;
+use App\Models\DefaultContest;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -34,8 +36,19 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        $this->call([
-            DefaultContestPriceBreakupSeeder::class,
-        ]);
+        if(DefaultContest::count() == 0) 
+        {
+            $this->call(DefaultContestPriceBreakupSeeder::class);
+        }
+
+        if(User::where('role', 3)->count() == 0) 
+        {
+            $this->call(BotUsersSeeder::class);
+        }
+
+        if(ContestType::count() == 0) 
+        {
+            $this->call(ContestTypeSeeder::class);
+        }
     }
 }

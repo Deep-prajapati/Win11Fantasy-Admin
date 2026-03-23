@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Fixture extends Model
 {
     use HasFactory, Compoships;
+
     protected $fillable = [
         'fixture_id',
         'league_id',
@@ -62,6 +63,7 @@ class Fixture extends Model
         'is_prize_refund',
         'is_prize_distributed'
     ];
+
     protected $casts = [
         'is_prize_refund' => 'boolean',
         'is_prize_distributed' => 'boolean',
@@ -79,7 +81,6 @@ class Fixture extends Model
 
     protected $appends = ['lineup', 'mega', 'playing11', 'is_upcomming'];
 
-
     public function getIsUpcommingAttribute()
     {
         if ($this->is_live == 1) {
@@ -87,6 +88,7 @@ class Fixture extends Model
         }
         return ($this->is_completed == 0 && $this->is_cancelled  == 0);
     }
+
     public function getLineupAttribute()
     {
         if (($this->is_live  == true || $this->is_completed == true || $this->is_cancelled  == true)) {
@@ -94,15 +96,16 @@ class Fixture extends Model
         }
         return Playing11::where('fixture_id', $this->fixture_id)->count() > 0;// 22;
     }
+
     public function getPlaying11Attribute()
     {
         return Playing11::where('fixture_id', $this->fixture_id)->pluck('player_id');
     }
+
     public function getMegaAttribute()
     {
         return Contest::where('match_id', $this->fixture_id)->orderby('total_winning_prize', 'desc')->first()?->total_winning_prize ?? 1;
     }
-
 
     public function league(): BelongsTo
     {
@@ -113,10 +116,12 @@ class Fixture extends Model
     {
         return $this->belongsTo(Season::class, 'season_id', 'season_id');
     }
+
     public function teama()
     {
         return $this->hasMany(Player::class, ['team_id', 'season_id'], ['localteam_id', 'season_id']);
     }
+
     public function teamb()
     {
         return $this->hasMany(Player::class, ['team_id', 'season_id'], ['visitorteam_id', 'season_id']);
@@ -125,6 +130,7 @@ class Fixture extends Model
     public function battings(){
         return $this->hasMany(Batting::class,'fixture_id','fixture_id');
     }
+
     public function bowlings(){
         return $this->hasMany(Bowling::class,'fixture_id','fixture_id');
     }
@@ -137,6 +143,7 @@ class Fixture extends Model
             return $this->teama()->whereIn('player_id', $teams)->union($this->teamb()->whereIn('player_id', $teams))->get();
         }
     }
+
     public function contests()
     {
         return $this->hasMany(Contest::class, 'match_id', 'fixture_id');
@@ -144,34 +151,37 @@ class Fixture extends Model
 
     public function scopeUpcoming($query)
     {
-        return $query->where('starting_at', '>', now())
-            ->orwhere('live', false)
-            ->Where('status', 'NS')
-            ->orderBy('starting_at', 'asc');
+        return $query->where('fixtures.starting_at', '>', now())->Where('fixtures.status', 'NS')->orderBy('fixtures.starting_at', 'asc');
     }
+
     public function scopeLive($query)
     {
         return $query->where('live', true)->Where('status', 'Live')->whereNull('winner_team_id');
     }
+
     public function scopeFinished($query)
     {
         return $query->whereNotNull('winner_team_id')
             ->orWhere('status', 'Finished');
     }
+
     public function scopeCancelled($query)
     {
         return $query->Where('status', 'Aban.');
     }
+
     protected function matchName(): Attribute
     {
         return Attribute::make(
             get: fn() => $this->localteam_name . ' vs ' . $this->visitorteam_name
         );
     }
+
     // public function winnerTeam(): BelongsTo
     // {
     //     return $this->belongsTo(Team::class, 'winner_team_id');
     // }
+
     /**
      * Get the localteam associated with the fixture
      */
@@ -192,6 +202,7 @@ class Fixture extends Model
     {
         return $this->belongsTo(Venue::class);
     }
+
     protected static function booted()
     {
         static::updated(function ($fixture) {
@@ -204,4 +215,3 @@ class Fixture extends Model
         // });
     }
 }
-

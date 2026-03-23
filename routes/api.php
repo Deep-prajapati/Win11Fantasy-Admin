@@ -43,15 +43,20 @@ Route::prefix('football')->group(function () {
 
 Route::get('appsettings',[CommonController::class,'getSettings']);
 
-Route::prefix('user')->group(function () {
+Route::prefix('user')->group(function () 
+{
     Route::post('login', [ApiAuth::class, 'login']);
     Route::post('otpverify', [ApiAuth::class, 'otpVerify']);
     Route::post('register', [ApiAuth::class, 'register']);
-    Route::group(['middleware' => 'auth:api'], function () {
+
+    Route::group(['middleware' => 'auth:api'], function () 
+    {
         Route::get('profile', [ApiUser::class, 'profile']);
         Route::post('profile-update', [ApiUser::class, 'profileUpdate']);
         Route::get('transaction', [ApiUser::class, 'transaction']);
-        Route::group(['prefix' => 'chat'], function () {
+
+        Route::group(['prefix' => 'chat'], function () 
+        {
             Route::get('/', [ApiUserChat::class, 'index']);
             Route::get('/users', [ApiUserChat::class, 'chatusers']);
             Route::post('/conversation', [ApiUserChat::class, 'conversation']);
@@ -59,13 +64,15 @@ Route::prefix('user')->group(function () {
             Route::post('/{conversation}/send', [ApiUserChat::class, 'sendMessage']);
             Route::get('/{conversation}/messages', [ApiUserChat::class, 'messages']);
         });
+
         Route::get('leaderboard',[ApiUser::class,'leaderboard']);
         Route::post('recharge',[ApiRecharge::class,'initiate']);
         Route::post('withdraw',[ApiRecharge::class,'withdraw']);
     });
 });
 
-Route::group(['prefix' => 'cricket'], function () {
+Route::group(['prefix' => 'cricket'], function () 
+{
     Route::post('/matches/{status}', [ApiMatch::class, 'index'])->where('status', 'live|upcoming|complete');
     Route::post('/match/{fixture_id}', [ApiMatch::class, 'matchdetails']);
     Route::post('/match/{fixture_id}/players', [ApiMatch::class, 'players']);
@@ -75,8 +82,10 @@ Route::group(['prefix' => 'cricket'], function () {
     Route::post('match/{fixture_id}/get-score', [ApiMatch::class, 'getScore']);
 });
 
-Route::group(['middleware' => 'auth:api'], function () {
-    Route::group(['prefix' => 'cricket'], function () {
+Route::group(['middleware' => 'auth:api'], function () 
+{
+    Route::group(['prefix' => 'cricket'], function () 
+    {
         Route::post('match/{fixture_id}/{contest_id}/view', [ApiMatch::class, 'mactchContestView']);
         Route::get('match/{fixture_id}/join-contest/list',[ApiMatch::class,'joinedContest']);
         Route::post('match/{fixture_id}/join-contest',[ApiMatch::class,'addJoinContest']);
