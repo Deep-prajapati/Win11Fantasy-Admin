@@ -7,7 +7,7 @@
             <div class="app-brand justify-content-center">
                 <a href="{{env('MAIN_APP_DOMAIN')}}" class="app-brand-link gap-2">
                     <span class="app-brand-logo demo">
-                        <img src="{{asset('assets/logo.svg')}}" alt="logo.." srcset="">
+                        <img src="{{asset('assets/Logo.svg')}}" alt="logo.." srcset="">
                     </span>
                 </a>
             </div>
