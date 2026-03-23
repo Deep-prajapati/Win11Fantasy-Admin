@@ -51,6 +51,7 @@ class UpdateFixture implements ShouldQueue
                 if ($response['success']) 
                 {
                     $data = $response['data'];
+                    
                     $isLive = function ($match, $data) 
                     {
                         return $match->is_completed ? $match->is_live : ($data['live'] == true && Carbon::parse($data['starting_at'])->lte(Carbon::now()));

@@ -2,7 +2,7 @@
     <div class="app-brand demo">
         <a href="index.html" class="app-brand-link">
             <span class="app-brand-logo demo">
-                <img src="{{asset('assets/logo.svg')}}" alt="logo.." srcset="">
+                <img src="{{asset('assets/Logo.svg')}}" alt="logo.." srcset="">
             </span>
             <!-- <span class="app-brand-text demo menu-text fw-bolder ms-2">{{ env('APP_NAME') }}</span> -->
         </a>

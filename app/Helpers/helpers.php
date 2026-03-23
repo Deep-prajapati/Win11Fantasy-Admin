@@ -116,7 +116,7 @@ function matchStatusBageByStatus($status)
 }
 function getUsersFilesUrl($data)
 {
-    return "https://user.fookri.com/" . $data;
+    return env('APP_URL') . "/" . $data;
 }
 
 function getContestForBotFill() {}

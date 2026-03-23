@@ -40,7 +40,7 @@
                                         data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bx bx-dots-vertical-rounded"></i>
                                     </button>
-                                    <div class="dropdown-menu" style="">
+                                    <div class="dropdown-menu">
                                         @if ($user->is_banned)
                                         <a class="dropdown-item" href="{{route('admin.users.unblock',$user->id)}}">
                                             <i class="bx bx-user-check me-1"></i>
@@ -73,9 +73,7 @@
                         </tr>
                     @endif
                 </tbody>
-
             </table>
-
         </div>
     </div> --}}
     @livewire('users')

@@ -2,11 +2,13 @@
 
 namespace App\Jobs;
 
-use App\Models\Fixture;
-use App\Models\League;
-use App\Models\Season;
-use App\Models\Team;
-use App\Models\Venue;
+use App\Models\{
+    Fixture,
+    League,
+    Season,
+    Team,
+    Venue
+};
 use App\Services\SportsMonkService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -37,13 +39,16 @@ class GetFixture implements ShouldQueue
     {
         try {
             $response =  $this->apiservice->getfixtureall();
-            $isLive = function ($match, $data) {
-                return $match->is_completed
-                    ? $match->is_live
-                    : ($data['live'] == true && Carbon::parse($data['starting_at'])->lte(Carbon::now()));
+
+            $isLive = function ($match, $data) 
+            {
+                return $match->is_completed ? $match->is_live : ($data['live'] == true && Carbon::parse($data['starting_at'])->lte(Carbon::now()));
             };
-            if ($response['success']) {
-                foreach ($response['data'] as $data) {
+
+            if ($response['success']) 
+            {
+                foreach ($response['data'] as $data) 
+                {
                     Fixture::updateOrCreate([
                         'fixture_id' => $data['id']
                     ], [
@@ -87,7 +92,9 @@ class GetFixture implements ShouldQueue
                         'is_live' => $isLive(Fixture::where('fixture_id', $data['id'])->first() ?? new Fixture(), $data),
                         'is_cancelled' =>  $data['status'] == 'Aban.',
                     ]);
-                    if (isset($data['visitorteam'])) {
+
+                    if (isset($data['visitorteam'])) 
+                    {
                         Team::updateOrcreate([
                             'team_id' => $data['visitorteam']['id'],
                         ], [
@@ -98,7 +105,9 @@ class GetFixture implements ShouldQueue
                             'national_team' => $data['visitorteam']['national_team'],
                         ]);
                     }
-                    if (isset($data['localteam'])) {
+
+                    if (isset($data['localteam'])) 
+                    {
                         Team::updateOrcreate([
                             'team_id' => $data['localteam']['id'],
                         ], [
@@ -109,7 +118,9 @@ class GetFixture implements ShouldQueue
                             'national_team' => $data['localteam']['national_team'],
                         ]);
                     }
-                    if (isset($data['venue'])) {
+
+                    if (isset($data['venue'])) 
+                    {
                         Venue::updateOrcreate([
                             'venue_id' => $data['venue']['id']
                         ], [
@@ -121,7 +132,9 @@ class GetFixture implements ShouldQueue
                             'floodlight' => $data['venue']['floodlight'] == true,
                         ]);
                     }
-                    if (isset($data['league'])) {
+
+                    if (isset($data['league'])) 
+                    {
                         League::updateOrcreate([
                             'league_id' => $data['league']['id'],
                         ], [
@@ -132,7 +145,9 @@ class GetFixture implements ShouldQueue
                             'type' => $data['league']['type']
                         ]);
                     }
-                    if (isset($data['season'])) {
+
+                    if (isset($data['season'])) 
+                    {
                         Season::updateOrcreate([
                             'season_id' => $data['season']['id'],
                         ], [
@@ -142,6 +157,7 @@ class GetFixture implements ShouldQueue
                         ]);
                     }
                 }
+                
                 Log::info([
                     'Job' => 'GetFixture',
                     'Message' => 'All data fatched',

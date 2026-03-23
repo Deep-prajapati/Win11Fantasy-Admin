@@ -72,6 +72,7 @@ class MatchController extends Controller
 
         return Helper::SuccessReturn($matches, 'match list fatched.');
     }
+
     public function matchdetails(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
@@ -110,39 +111,47 @@ class MatchController extends Controller
             ->first();
         return Helper::SuccessReturn($match, 'match data fatched.');
     }
+
     public function players(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
-        if (!$fixture) {
+
+        if (!$fixture) 
+        {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid request',
             ]);
         }
+
         $data['teams'] = [$fixture->localteam_id, $fixture->visitorteam_id];
-        $data['players'] =  Player::whereIn('players.team_id', [$fixture->localteam_id, $fixture->visitorteam_id])
-            ->join('teams', 'teams.team_id', '=', 'players.team_id')
-            ->select(
-                'players.player_id',
-                'players.fullname',
-                'players.image_path',
-                'players.battingstyle',
-                'players.bowlingstyle',
-                'players.position_id',
-                'players.position_name',
-                'teams.name as team_name',
-                'teams.code as team_code',
-                'teams.team_id as team_id',
-            )
-            ->get();
+
+        $data['players'] =  Player::whereIn('players.team_id', [$fixture->localteam_id, $fixture->visitorteam_id])->join('teams', 'teams.team_id', '=', 'players.team_id')
+        ->select(
+            'players.player_id',
+            'players.fullname',
+            'players.image_path',
+            'players.battingstyle',
+            'players.bowlingstyle',
+            'players.position_id',
+            'players.position_name',
+            'teams.name as team_name',
+            'teams.code as team_code',
+            'teams.team_id as team_id',
+        )->get();
+
         return Helper::SuccessReturn($data, 'match list fatched.');
+        
         $data['playing11']['a'] = Playing11::where(['fixture_id' => $fixture_id, 'team_id' => $fixture->localteam_id])->pluck('player_id');
         $data['playing11']['b'] = Playing11::where(['fixture_id' => $fixture_id, 'team_id' => $fixture->visitorteam_id])->pluck('player_id');
     }
+
     public function playing11(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
-        if (!$fixture) {
+
+        if (!$fixture) 
+        {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid request',
@@ -152,62 +161,74 @@ class MatchController extends Controller
         $data['playing11']['b'] = Playing11::where(['fixture_id' => $fixture_id, 'team_id' => $fixture->visitorteam_id])->pluck('player_id');
         return Helper::SuccessReturn($data, 'data list fatched.');
     }
+
     public function contests(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
-        if (!$fixture) {
+
+        if (!$fixture) 
+        {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid request',
             ]);
         }
+
         $contests = Contest::where('match_id', $fixture_id)->active()
             ->select('id', 'mrp', 'contest_type', 'total_winning_prize', 'entry_fees', 'total_spots', 'filled_spot', 'default_contest_id', 'contest_type', 'first_prize', 'is_free', 'usable_bonus')
             ->with(['contestType:id,contest_type,max_entries,cancellable as is_temp', 'prizeBreakups'])
             ->orderby('total_winning_prize', 'desc')
             ->get();
         $user = Auth::guard('api')->user(); // or just Auth::user() if default guard is 'api'
-        if ($user) {
+
+        if ($user) 
+        {
             $userContests = JoinCrickContest::where([
                 'match_id' => $fixture_id,
                 'user_id' => $user->id
-            ])
-                ->get()
-                ->groupBy('contest_id') // Group by contest_id
-                ->map(function ($group) {
-                    $teamIds = $group->pluck('created_team_id')->implode(',');
-                    $firstItem = $group->first();
-                    $firstItem->teams = $teamIds;
-                    unset($firstItem['created_team_id']);
-                    return $firstItem;
-                })
-                ->values();
+            ])->get()->groupBy('contest_id') // Group by contest_id
+            ->map(function ($group) 
+            {
+                $teamIds = $group->pluck('created_team_id')->implode(',');
+                $firstItem = $group->first();
+                $firstItem->teams = $teamIds;
+                unset($firstItem['created_team_id']);
+                return $firstItem;
+            })->values();
         } else {
             $userContests = [];
         }
         return Helper::SuccessReturn(['contests' => $contests, 'userContests' => $userContests], 'contest list fatched.');
     }
+
     public function priceDetails(Request $request, $contest_id)
     {
         $contest = Contest::active()->where('id', $contest_id)->first();
-        if (!$contest) {
+
+        if (!$contest) 
+        {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid request',
             ]);
         }
+
         $pricedetails = PrizeBreakup::where(['contest_type_id' => $contest->contest_type, 'default_contest_id' => $contest->default_contest_id])->get();
         return $pricedetails;
     }
+
     public function createTeam(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
-        if (!$fixture) {
+
+        if (!$fixture) 
+        {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid request',
             ]);
         }
+        
         $team_id = [$fixture->localteam_id, $fixture->visitorteam_id];
         $rules = [
             'players' => ['required', 'array', 'size:11'],
