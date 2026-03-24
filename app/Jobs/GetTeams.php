@@ -37,7 +37,7 @@ class GetTeams implements ShouldQueue
             $matches = Fixture::select('localteam_id', 'fixture_id', 'visitorteam_id', 'season_id')
                 ->whereDate('starting_at', '>=', Carbon::today())
                 ->whereNot('status', 'Aban.')
-                ->whereDate('starting_at', '<', Carbon::today()->addDays(4))
+                ->whereDate('starting_at', '<', Carbon::today()->addDays(10))
                 ->where('is_completed', false)
             ->where('is_cancelled', false)->get();
             // ->whereIn('season_id',[6,24,44,185,309,312,498,507,782,1058,1292,1427,1648,1657,10,104,107,110,324,450,453,525,830,1079,1349,1624,15,188,191,648,986,1145,1496,1636])

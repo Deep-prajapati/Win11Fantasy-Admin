@@ -49,7 +49,7 @@ Route::prefix('user')->group(function ()
     Route::post('otpverify', [ApiAuth::class, 'otpVerify']);
     Route::post('register', [ApiAuth::class, 'register']);
 
-    Route::group(['middleware' => 'auth:api'], function () 
+    Route::group(['middleware' => 'auth:sanctum'], function () 
     {
         Route::get('profile', [ApiUser::class, 'profile']);
         Route::post('profile-update', [ApiUser::class, 'profileUpdate']);
@@ -82,7 +82,7 @@ Route::group(['prefix' => 'cricket'], function ()
     Route::post('match/{fixture_id}/get-score', [ApiMatch::class, 'getScore']);
 });
 
-Route::group(['middleware' => 'auth:api'], function () 
+Route::group(['middleware' => 'auth:sanctum'], function () 
 {
     Route::group(['prefix' => 'cricket'], function () 
     {

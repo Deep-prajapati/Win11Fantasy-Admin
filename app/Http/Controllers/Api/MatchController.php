@@ -441,6 +441,7 @@ class MatchController extends Controller
     public function mymatches(Request $request)
     {
         $user = auth()->user();
+
         $joinedMatches = JoinCrickContest::where('user_id', $user->id)
             ->pluck('match_id')
             ->unique();

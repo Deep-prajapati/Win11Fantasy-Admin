@@ -171,7 +171,7 @@ class UpdateFixture implements ShouldQueue
                 'Message' => 'Update fixture Successfully',
             ]);
         } catch (\Throwable $th) {
-            Log::info([
+            Log::error([
                 'Job' => 'UpdateFixture',
                 'Message' => 'Failed to fatch data',
                 'data' => $th->getMessage()
