@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\FootballJoinContest;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\TypesValue;
@@ -9,9 +10,17 @@ function joinedCricTeamCount($user_id, $match_id, $contest_id)
 {
     return JoinCrickContest::where(['match_id' => $match_id, 'user_id' => $user_id, 'contest_id' => $contest_id])->count();
 }
+function joinedFootballTeamCount($user_id, $match_id, $contest_id)
+{
+    return FootballJoinContest::where(['match_id' => $match_id, 'user_id' => $user_id, 'contest_id' => $contest_id])->count();
+}
 function alreayJoinedContestWithTeam($user_id, $team_id, $match_id, $contest_id)
 {
     return JoinCrickContest::where(['created_team_id' => $team_id, 'match_id' => $match_id, 'user_id' => $user_id, 'contest_id' => $contest_id])->exists();
+}
+function alreayFootballJoinedContestWithTeam($user_id, $team_id, $match_id, $contest_id)
+{
+    return FootballJoinContest::where(['created_team_id' => $team_id, 'match_id' => $match_id, 'user_id' => $user_id, 'contest_id' => $contest_id])->exists();
 }
 function todayUserCount()
 {
@@ -82,20 +91,6 @@ function matchStatusBage($match)
         return '<span class="badge bg-label-primary me-1">Upcomming</span>';
     }
 }
-function matchFootballStatusBage($match)
-{
-    if ($match->is_live) {
-        return '<span class="badge bg-label-info me-1">Live</span>';
-    } else if ($match->is_cancelled) {
-        return '<span class="badge bg-label-danger me-1">Cancelled</span>';
-    } else if ($match->is_completed) {
-        return '<span class="badge bg-label-success me-1">Completed</span>';
-    } else if($match->is_upcomming) {
-        return '<span class="badge bg-label-primary me-1">Upcomming</span>';
-    }else{
-        return '<span class="badge me-1">NA</span>';
-    }
-}
 function matchStatusBageByStatus($status)
 {
     switch ($status) {
@@ -116,7 +111,7 @@ function matchStatusBageByStatus($status)
 }
 function getUsersFilesUrl($data)
 {
-    return env('APP_URL') . "/" . $data;
+    return "https://user.fookri.com/" . $data;
 }
 
 function getContestForBotFill() {}
@@ -132,33 +127,32 @@ function countBotUserJoinedInContestForMatch($match_id, $contest_id, $user_id)
 }
 function botsAllowedInContest($match_id, $contest, $contest_type)
 {
-    $botCount = JoinCrickContest::where([
-        'match_id' => $match_id,
-        'contest_id' => $contest->id
-    ])->whereHas('user', function ($query) {
-        $query->where('role', 3);
-    })->count();
-    $botUserCount = User::where('role', 3)->count();
-    $maxBotsTeam = $contest_type->max_entries * $botUserCount;
-    return ($maxBotsTeam >= $contest->defaultContest->bot_user) ? ($botCount < $contest->defaultContest->bot_user) : (($botCount < $maxBotsTeam) ? true : false);
-}
-function getsportmonksImage($imagePath)
-{
-    $defaultImage = asset('assets/img/placeholder.png');
-    if (empty($imagePath) || $imagePath === 'https://cdn.sportmonks.com' || $imagePath === 'https://cdn.sportmonks.com/') {
-        return $defaultImage;
+    if (isset($contest->defaultContest)) {
+
+        $botCount = JoinCrickContest::where([
+            'match_id' => $match_id,
+            'contest_id' => $contest->id
+        ])->whereHas('user', function ($query) {
+            $query->where('role', 3);
+        })->count();
+        $botUserCount = User::where('role', 3)->count();
+        $maxBotsTeam = $contest_type->max_entries * $botUserCount;
+        return ($maxBotsTeam >= $contest->defaultContest->bot_user) ? ($botCount < $contest->defaultContest->bot_user) : (($botCount < $maxBotsTeam) ? true : false);
+    } else {
+        return false;
     }
-    return $imagePath;
 }
+
+
 
 function getDefaultCredits($positionId)
 {
     switch ($positionId) {
         case 1: // Batsman
             return 9.5;
-        case 2:
-            return 8.5;
-        case 3:
+        case 2: // Bowler
+            return     8.5;
+        case 3: // Wicketkeeper
             return 8.0;
         case 4: // All-rounder
             return 9.5;
@@ -166,6 +160,8 @@ function getDefaultCredits($positionId)
             return 6.0;
     }
 }
+
+
 
 function typeStore($data)
 {
@@ -180,16 +176,4 @@ function typeStore($data)
             'stat_group' => $data['stat_group'] ?? '',
         ]);
     }
-}
-
-function generateShortCode(string $input): string
-{
-    $input = trim(preg_replace('/\s+/', ' ', $input));
-    $words = explode(' ', $input);
-    $shortCode = '';
-    foreach ($words as $word) {
-        $shortCode .= strtoupper($word[0]);
-    }
-
-    return $shortCode;
 }

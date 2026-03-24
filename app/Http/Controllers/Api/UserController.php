@@ -8,7 +8,9 @@ use App\Models\Transection;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
+use App\Models\SiteSettings;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -19,7 +21,6 @@ class UserController extends Controller
         $user->load('account');
         return Helper::SuccessReturn($user, 'User profile fatched successfully.');
     }
-    
     public function profileUpdate(Request $request)
     {
         $user = auth()->user();
@@ -39,7 +40,7 @@ class UserController extends Controller
             ],
             'invite_code' => [
                 'nullable',
-                Rule::exists('users', 'ref_code')
+                Rule::exists('users', 'invite_code')
             ],
             'bank_name' => [
                 Rule::requiredIf(function () use ($request) {
@@ -146,18 +147,19 @@ class UserController extends Controller
         }
         $user->email = $request->email;
         $user->name = $request->name;
-        if (isset($request->invite_code) && !isset($user->$request->invite_code)) {
-            $user->invite_code = $request->invite_code;
+        if (isset($request->invite_code) && !isset($user->ref_code)) {
+            $user->ref_code = $request->invite_code;
             // invite bonus
             $user2 = User::where('invite_code', $request->invite_code)->with('account')->first();
-            if ($user2 && $user2->account) {
+            $refBonus = SiteSettings::getValue('refer_bonus', 0);
+            if ($refBonus != 0 && $user2 && $user2->account) {
                 $user2->account->bonus += 100;
                 $user2->account->save();
                 Transection::create([
-                    'user_id'=>$user2->id,
-                    'type'=>1,
-                    'amount'=>100,
-                    'desc'=>'Referal Bonus',
+                    'user_id' => $user2->id,
+                    'type' => 1,
+                    'amount' => 100,
+                    'desc' => 'Referal Bonus',
                 ]);
             }
         }
@@ -172,27 +174,27 @@ class UserController extends Controller
         $user->account->save();
         return Helper::SuccessReturn($user, 'Your profile updated successfully.');
     }
-
     public function transaction(Request $request)
     {
         $user = auth()->user();
         $tnx = Transection::where("user_id", $user->id)->orderby('created_at', 'desc')->get();
         return Helper::SuccessReturn($tnx, 'Data fatched');
     }
-
     public function leaderboard()
     {
         // fake leaderboard working
-        $data = User::where(['role' => 3, 'is_banned' => false])
-        ->inRandomOrder()
-        ->take(10)
-        ->map(function($user) {
-            $user->points = rand(100, 1000);
-            return $user;
-        })
-        ->sortByDesc('points')
-        ->get();
-
-        return Helper::SuccessReturn($data,'data fatched.');
+        $data = Cache::remember('leaderboard', 300, function () {
+            return User::where(['role' => 3, 'is_banned' => false])
+                ->inRandomOrder()
+                ->take(10)
+                ->get()
+                ->map(function ($user) {
+                    $user->score = rand(5000, 10000);
+                    return $user;
+                })
+                ->sortByDesc('score')
+                ->values();
+        });
+        return Helper::SuccessReturn($data, 'data fatched.');
     }
 }

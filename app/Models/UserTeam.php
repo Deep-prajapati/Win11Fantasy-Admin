@@ -60,11 +60,11 @@ class UserTeam extends Model
                 ->limit(1)
         ]);
     }
+
     public function user()
     {
         return $this->belongsTo(User::class,'user_id','id');
     }
-
     /**
      * Get teams as an array.
      */

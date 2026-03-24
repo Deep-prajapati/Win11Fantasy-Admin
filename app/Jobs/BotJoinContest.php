@@ -39,7 +39,7 @@ class BotJoinContest implements ShouldQueue
                 ->where('is_completed', false)
                 ->where('is_cancelled', false)
                 ->orderby('starting_at', 'asc')
-                ->whereBetween('starting_at', [Carbon::now(), Carbon::now()->addHour()])
+                ->whereBetween('starting_at', [Carbon::now(), Carbon::now()->addMinutes(5)])
                 // ->select('fixture_id', 'season_id')
                 ->get();
             foreach ($matches as $match) {

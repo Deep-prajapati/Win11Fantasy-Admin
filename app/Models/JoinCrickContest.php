@@ -52,7 +52,7 @@ class JoinCrickContest extends Model
         'is_inv_cal_mon'    => 'boolean',
     ];
 
-
+    
     public function user(){
         return $this->belongsTo(User::class,'user_id','id');
     }

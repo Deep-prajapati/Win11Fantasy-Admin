@@ -17,7 +17,6 @@ class FootballLeague extends Model
         'type',
         'sub_type',
         'last_played_at',
-        'status'
     ];
 
     protected $casts = [
@@ -25,7 +24,6 @@ class FootballLeague extends Model
         'sport_id' => 'integer',
         'country_id' => 'integer',
         'active' => 'boolean',
-        'status' => 'boolean',
         'last_played_at' => 'datetime',
     ];
 

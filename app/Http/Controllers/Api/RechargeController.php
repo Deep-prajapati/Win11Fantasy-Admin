@@ -51,7 +51,7 @@ class RechargeController extends Controller
         $recharge = new Recharge();
         // if ($request->file('image')) {
         //     $filePath = FileHelper::uploadFile($request->file('image'), 'uploads/recharges');
-        // $recharge->image = $filePath;
+        //     // $recharge->image = $filePath;
         // }
         $recharge->method = $request->method;
         $recharge->user_id = auth()->user()->id;

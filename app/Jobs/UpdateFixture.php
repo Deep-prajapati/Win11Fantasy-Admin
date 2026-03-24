@@ -34,34 +34,30 @@ class UpdateFixture implements ShouldQueue
     public function handle(): void
     {
         try {
-            $matches = Fixture::select('localteam_id', 'fixture_id', 'visitorteam_id', 'season_id')->addSelect('is_live', 'is_cancelled', 'is_completed')
+            $matches = Fixture::select('localteam_id', 'fixture_id', 'visitorteam_id', 'season_id')
+                ->addSelect('is_live', 'is_cancelled', 'is_completed')
                 // ->where(function ($query) {
                 //     $query->where('is_completed', false)
                 //         ->orWhere('is_cancelled', false);
                 // })
                 ->where('is_completed', false)
                 ->where('is_cancelled', false)
+
                 ->whereDate('starting_at', '>=', Carbon::yesterday())
-                ->whereDate('starting_at', '<=', Carbon::tomorrow())->get();
+                ->whereDate('starting_at', '<=', Carbon::tomorrow())
+                ->get();
+            foreach ($matches as $match) {
 
-            foreach ($matches as $match) 
-            {
                 $response = $this->apiservice->getFixtureUpdates($match->fixture_id);
-
-                if ($response['success']) 
-                {
+                if ($response['success']) {
                     $data = $response['data'];
-                    
-                    $isLive = function ($match, $data) 
-                    {
-                        return $match->is_completed ? $match->is_live : ($data['live'] == true && Carbon::parse($data['starting_at'])->lte(Carbon::now()));
+                    $isLive = function ($match, $data) {
+                        return $match->is_completed
+                            ? $match->is_live
+                            : ($data['live'] == true && Carbon::parse($data['starting_at'])->lte(Carbon::now()));
                     };
-
-                    if (count($data['lineup']) > 0) 
-                    {
-                        foreach ($data['lineup'] as $index => $lineup) 
-                        {
-                            // $team_id = ($index < 11) ? $match->localteam_id : $match->visitorteam_id;
+                    if (count($data['lineup']) > 0) {
+                        foreach ($data['lineup'] as $index => $lineup) {
                             $team_id = $lineup['lineup']['team_id'];
                             // $player = Player::where(['player_id' => $lineup['id'], 'team_id' => $team_id, 'season_id' => $match->season_id])->first();
                             // if (!$player) {
@@ -95,9 +91,7 @@ class UpdateFixture implements ShouldQueue
                             ]);
                         }
                     }
-
-                    if (count($data['runs']) > 0) 
-                    {
+                    if (count($data['runs']) > 0) {
                         $runsToUpsert = collect($data['runs'])->map(function ($runData) {
                             return [
                                 'fixture_id' => $runData['fixture_id'],
@@ -105,7 +99,7 @@ class UpdateFixture implements ShouldQueue
                                 'inning' => $runData['inning'] ?? '',
                                 'score' => $runData['score'] ?? 0,
                                 'wickets' => $runData['wickets'] ?? 0,
-                                'overs' => $runData['overs'],
+                                'overs' => $runData['overs'] ?? 0,
                                 'pp1' => $runData['pp1'] ?? '',
                                 'pp2' => $runData['pp2'] ?? '',
                                 'pp3' => $runData['pp3'] ?? '',
@@ -117,7 +111,6 @@ class UpdateFixture implements ShouldQueue
                             ['inning', 'score', 'wickets', 'overs', 'pp1', 'pp2', 'pp3']
                         );
                     }
-
                     Fixture::updateOrCreate([
                         'fixture_id' => $data['id']
                     ], [
@@ -161,7 +154,7 @@ class UpdateFixture implements ShouldQueue
                         // 'is_live' => ($data['live'] == true && Carbon::parse($data['starting_at'])->lte(Carbon::now())), //$data['status'] == 'Live'
                         'is_live' => $isLive(Fixture::where('fixture_id', $data['id'])->first() ?? new Fixture(), $data),
                         'is_cancelled' =>  $data['status'] == 'Aban.',
-                        'is_completed' =>  $data['status'] == 'Finished',
+                        // 'is_completed' =>  $data['status'] == 'Finished',
                     ]);
                 }
             }

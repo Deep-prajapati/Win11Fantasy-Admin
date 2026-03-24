@@ -17,12 +17,6 @@ class FileHelper
     public static function uploadFile(UploadedFile $file, string $path)
     {
         try {
-            // Validate file
-            if (!$file->isValid()) {
-                \Log::error('File upload failed: ' . $file->getErrorMessage());
-                return null;
-            }
-
             // Ensure the directory exists
             $destinationPath = public_path($path);
             if (!file_exists($destinationPath)) {
@@ -33,18 +27,12 @@ class FileHelper
             $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
 
             // Move the file to the public directory
-            $uploadedPath = $file->move($destinationPath, $fileName);
-
-            if (!$uploadedPath) {
-                \Log::error('File move failed');
-                return null;
-            }
+            $file->move($destinationPath, $fileName);
 
             // Return the relative file path (accessible via URL)
             return $path . '/' . $fileName;
         } catch (\Exception $e) {
-            \Log::error('File upload exception: ' . $e->getMessage());
-            return null;
+            return null; // Return null if an error occurs
         }
     }
 
@@ -60,7 +48,7 @@ class FileHelper
             $fullPath = public_path($filePath);
 
             if (file_exists($fullPath)) {
-                return unlink($fullPath);
+                return unlink($fullPath); // Delete the file
             }
 
             return false; // File doesn't exist

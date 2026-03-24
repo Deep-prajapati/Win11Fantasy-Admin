@@ -44,28 +44,23 @@ class GetTeams implements ShouldQueue
             // ->skip(5)
             // ->take(5) 
 
-            foreach ($matches as $match) 
-            {
+            foreach ($matches as $match) {
                 $teamIds = [$match->localteam_id, $match->visitorteam_id];
                 $playersData = [];
 
-                foreach ($teamIds as $teamId) 
-                {
+                foreach ($teamIds as $teamId) {
+                    // $teamDetails = $this->apiservice->getTeam($teamId); complete
                     $teamDetails = $this->apiservice->getteamSquad($teamId, $match->season_id);
 
-                    if (!isset($teamDetails['data']['squad'])) 
-                    {
+                    if (!isset($teamDetails['data']['squad'])) {
                         continue; // Skip if no squad data
                     }
-
-                    if (isset($teamDetails['data']['error'])) 
-                    {
+                    if (isset($teamDetails['data']['error'])) {
                         print_r($teamDetails['data']);
                         break; // Skip if no squad data
                     }
 
-                    foreach ($teamDetails['data']['squad'] as $data) 
-                    {
+                    foreach ($teamDetails['data']['squad'] as $data) {
                         $playersData[] = [
                             'player_id' => $data['id'],
                             'team_id' => $teamId,
@@ -82,19 +77,19 @@ class GetTeams implements ShouldQueue
                             'position_id' => $data['position']['id'],
                             'position_name' => $data['position']['name'],
                             'updated_at' => now(), // Ensure timestamps are updated
+                            'credits' => getDefaultCredits($data['position']['id']),
                         ];
                     }
                 }
 
                 // **Bulk Insert or Update for Unique Constraint (player_id, team_id, match_id)**
-                if (!empty($playersData)) 
-                {
+                if (!empty($playersData)) {
                     // return $playersData;
                     DB::transaction(function () use ($playersData) {
                         Player::upsert(
                             $playersData, // Data to insert/update
                             ['player_id', 'team_id', 'season_id'], // Unique key constraints
-                            ['fullname', 'image_path', 'battingstyle', 'bowlingstyle', 'position_id', 'position_name', 'updated_at'] // Columns to update if conflict occurs
+                            ['fullname', 'image_path', 'battingstyle', 'bowlingstyle', 'position_id', 'position_name', 'credits', 'updated_at'] // Columns to update if conflict occurs
                         );
                     });
                 }

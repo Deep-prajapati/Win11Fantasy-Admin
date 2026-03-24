@@ -22,18 +22,19 @@ class FootballTeamPlayers extends Model
         'position_developer_name',
         'position_model_type',
         'position_stat_group',
-        
+        'points',
     ];
 
     protected $casts = [
-        'transfer_id' => 'integer',
-        'player_id' => 'integer',
-        'team_id' => 'integer',
-        'position_id' => 'integer',
-        'detailed_position_id' => 'integer',
+        // 'points' => 'integer',
+        // 'transfer_id' => 'integer',
+        // 'player_id' => 'integer',
+        // 'team_id' => 'integer',
+        // 'position_id' => 'integer',
+        // 'detailed_position_id' => 'integer',
         'start' => 'date',
         'end' => 'date',
         'captain' => 'boolean',
-        'jersey_number' => 'integer',
+        // 'jersey_number' => 'integer',
     ];
 }

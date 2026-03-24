@@ -22,17 +22,16 @@ class Player extends Model
         'image_path',
         'dateofbirth',
         'gender',
+        'credits', // new added 
         'battingstyle',
         'bowlingstyle',
         'position_id',
         'position_name',
-        'credits', // new added
     ];
-
 
     protected $casts = [
         'dateofbirth' => 'date',
-        'credits'=>'float',
+        'credits'=>'float'
     ];
 
     /**
@@ -43,6 +42,9 @@ class Player extends Model
     //     return $this->belongsTo(Country::class);
     // }
 
+    /**
+     * Get the player's age
+     */
     public function getAgeAttribute()
     {
         return Carbon::parse($this->dateofbirth)->age;

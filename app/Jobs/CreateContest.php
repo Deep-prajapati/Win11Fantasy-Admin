@@ -34,7 +34,7 @@ class CreateContest implements ShouldQueue
         try {
             $matches = Fixture::upcoming()->pluck('fixture_id');
 
-            $defaultContests = DefaultContest::where('is_cloneable', true)->where('is_deleted', '!=', 1)->get();
+            $defaultContests = DefaultContest::withTrashed()->where('is_cloneable', true)->get();
             $contests = [];
 
             DB::transaction(function () use ($defaultContests, $matches, $contests) 

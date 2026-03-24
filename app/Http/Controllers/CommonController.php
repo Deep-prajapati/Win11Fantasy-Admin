@@ -6,7 +6,6 @@ use App\Models\Player;
 use App\Helpers\Helper;
 use App\Models\Contest;
 use App\Models\Fixture;
-use App\Models\SiteSettings;
 use Illuminate\Http\Request;
 use App\Models\JoinCrickContest;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +26,7 @@ class CommonController extends Controller
         return [
             'name' => 'Fookri',
             'method' => 1,
-            'upi_id' =>  SiteSettings::getValue('payment_upi_info','games.fookri@okaxis'),
+            'upi_id' => 'games.fookri@okaxis',
         ];
     }
 

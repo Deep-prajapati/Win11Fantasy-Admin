@@ -168,16 +168,15 @@ class SportsmonkController extends Controller
         foreach ($matches as $match) {
 
             $response = $this->apiservice->getFixtureUpdates($match->fixture_id);
- if ($response['success']) {
+            if ($response['success']) {
                 $data = $response['data'];
-$isLive = function ($match, $data) {
+                $isLive = function ($match, $data) {
                     return $match->is_completed
                         ? $match->is_live
                         : ($data['live'] == true && Carbon::parse($data['starting_at'])->lte(Carbon::now()));
                 };
                 if (count($data['lineup']) > 0) {
                     foreach ($data['lineup'] as $index => $lineup) {
-                        // $team_id = ($index < 11) ? $match->localteam_id : $match->visitorteam_id;
                         $team_id = $lineup['lineup']['team_id'];
                         // $player = Player::where(['player_id' => $lineup['id'], 'team_id' => $team_id, 'season_id' => $match->season_id])->first();
                         // if (!$player) {
@@ -219,7 +218,7 @@ $isLive = function ($match, $data) {
                             'inning' => $runData['inning'] ?? '',
                             'score' => $runData['score'] ?? 0,
                             'wickets' => $runData['wickets'] ?? 0,
-                            'overs' => $runData['overs'],
+                            'overs' => $runData['overs'] ?? 0,
                             'pp1' => $runData['pp1'] ?? '',
                             'pp2' => $runData['pp2'] ?? '',
                             'pp3' => $runData['pp3'] ?? '',
@@ -274,7 +273,7 @@ $isLive = function ($match, $data) {
                     // 'is_live' => ($data['live'] == true && Carbon::parse($data['starting_at'])->lte(Carbon::now())), //$data['status'] == 'Live'
                     'is_live' => $isLive(Fixture::where('fixture_id', $data['id'])->first() ?? new Fixture(), $data),
                     'is_cancelled' =>  $data['status'] == 'Aban.',
-                     'is_completed' =>  $data['status'] == 'Finished',
+                    // 'is_completed' =>  $data['status'] == 'Finished',
                 ]);
             }
         }
@@ -298,7 +297,9 @@ $isLive = function ($match, $data) {
             $playersData = [];
 
             foreach ($teamIds as $teamId) {
+                // $teamDetails = $this->apiservice->getTeam($teamId); complete
                 $teamDetails = $this->apiservice->getteamSquad($teamId, $match->season_id);
+
                 if (!isset($teamDetails['data']['squad'])) {
                     continue; // Skip if no squad data
                 }
@@ -324,6 +325,7 @@ $isLive = function ($match, $data) {
                         'position_id' => $data['position']['id'],
                         'position_name' => $data['position']['name'],
                         'updated_at' => now(), // Ensure timestamps are updated
+                        'credits' => getDefaultCredits($data['position']['id']),
                     ];
                 }
             }
@@ -335,7 +337,7 @@ $isLive = function ($match, $data) {
                     Player::upsert(
                         $playersData, // Data to insert/update
                         ['player_id', 'team_id', 'season_id'], // Unique key constraints
-                        ['fullname', 'image_path', 'battingstyle', 'bowlingstyle', 'position_id', 'position_name', 'updated_at'] // Columns to update if conflict occurs
+                        ['fullname', 'image_path', 'battingstyle', 'bowlingstyle', 'position_id', 'position_name', 'credits', 'updated_at'] // Columns to update if conflict occurs
                     );
                 });
             }
@@ -614,9 +616,7 @@ $isLive = function ($match, $data) {
     public function createContest()
     {
         $matches = Fixture::upcoming()->pluck('fixture_id');
-	$defaultContests = DefaultContest::where('is_cloneable', true)
-        ->where('is_deleted', '!=', 1)
-        ->get();
+        $defaultContests = DefaultContest::withTrashed()->where('is_cloneable', true)->get();
         DB::transaction(function () use ($defaultContests, $matches) {
             foreach ($matches as $match_id) {
                 foreach ($defaultContests as $contest) {
@@ -712,7 +712,9 @@ $isLive = function ($match, $data) {
                     ->orderBy('points', 'desc')
                     ->pluck('points');
                 if (count($JoindContest) > 0) {
-                    $pointsString = $JoindContest->implode(',');
+                    $pointsString = $JoindContest->pluck('points')->map(function ($point) {
+                        return number_format($point, 2, '.', '');
+                    })->implode(',');
                     $entries = DB::table('join_crick_contests')
                         ->select('id', 'user_id', 'created_team_id', 'points')
                         ->selectRaw("FIND_IN_SET(points, '$pointsString') as ranks")
@@ -805,12 +807,11 @@ $isLive = function ($match, $data) {
             ->where('is_completed', false)
             ->where('is_cancelled', false)
             ->orderby('starting_at', 'asc')
-            ->whereBetween('starting_at', [Carbon::now(), Carbon::now()->addHour()])
-            // ->select('fixture_id', 'season_id')
+            ->whereBetween('starting_at', [Carbon::now(), Carbon::now()->addMinutes(5)])
+            // ->where('fixture_id', 65919)
             ->get();
         foreach ($matches as $match) {
             $contests = Contest::where('match_id', $match->fixture_id)
-                ->whereNotIn('contest_type', [2, 6])
                 ->with('contestType', 'defaultContest')
                 ->where(function ($query) {
                     $query->whereRaw('filled_spot < total_spots');
@@ -822,14 +823,12 @@ $isLive = function ($match, $data) {
             // $players = Player::where('season_id',$match->season_id)->whereIn('team_id',[$match->localteam_id,$match->visitorteam_id])->;
         }
     }
-
     private function JoinBotUserInContest($match, $contest)
     {
         while (botsAllowedInContest($contest->match_id, $contest, $contest->contestType)) {
             $this->joinbotToContest($match, $contest);
         }
     }
-
     private function joinbotToContest($match, $contest)
     {
         $botUser = User::where('role', 3)->inRandomOrder()->first();
@@ -837,13 +836,10 @@ $isLive = function ($match, $data) {
             $this->createBotUserTeamAndJoin($match, $contest, $botUser);
         }
     }
-
     protected function createBotUserTeamAndJoin($match, $contest, $botUser)
     {
-        $players = Player::where('season_id', $match->season_id)
+        $players = Playing11::where('fixture_id', $match->fixture_id)
             ->whereIn('team_id', [$match->localteam_id, $match->visitorteam_id])
-            ->inRandomOrder()
-            ->limit(11)
             ->pluck('player_id')
             ->toArray();
 
@@ -875,7 +871,6 @@ $isLive = function ($match, $data) {
         }
         return true;
     }
-    
     public function resetBotsTeams()
     {
         $matches = Fixture::whereDate('starting_at', Carbon::today())
@@ -911,5 +906,65 @@ $isLive = function ($match, $data) {
                 ]);
             }
         }
+    }
+
+    public function cancelContest()
+    {
+        $matches = Fixture::whereDate('starting_at', Carbon::today())
+            ->whereNotIn('status', ['Aban.'])
+            ->where('is_completed', false)
+            ->where('is_cancelled', false)
+            ->orderby('starting_at', 'asc')
+            ->whereBetween('starting_at', [Carbon::now()->subMinutes(7), Carbon::now()])
+            ->get();
+
+        foreach ($matches as $match) {
+            $contests = Contest::where('match_id', $match->fixture_id)
+                ->where(['is_cancelled' => false, 'is_cancelable' => true, 'is_active' => true,])
+                ->where(function ($query) {
+                    $query->whereRaw('filled_spot < total_spots');
+                })
+                ->get();
+            foreach ($contests as $key => $contest) {
+                if ($contest->is_cancelable && $this->contestInloss($contest)) {
+                    $contest->is_cancelled = true;
+                    $contest->update();
+                    $joined = JoinCrickContest::where(['match_id' => $match->fixture_id, 'contest_id' => $contest->id])
+                        ->whereHas('user', function ($query) {
+                            $query->where('role', 2);
+                        })
+                        ->get();
+                    DB::beginTransaction();
+                    try {
+                        foreach ($joined as $data) {
+                            UserWallet::where('user_id', $data->user_id)
+                                ->increment('balance', $data->entryfee_deposit)
+                                ->increment('bonus', $data->entryfee_bonus);
+
+                            Transection::create([
+                                'user_id' => $data->user_id,
+                                'type' => 1,
+                                'amount' => $data->entryfee_deposit,
+                                'desc' => 'Contest Cancelled | ' . $match->localteam_code . ' - ' . $match->visitorteam_code,
+                            ]);
+                        }
+                        DB::commit();
+                    } catch (\Exception $e) {
+                        DB::rollBack();
+                        throw $e;
+                    }
+                }
+            }
+        }
+    }
+    protected function contestInloss($contest)
+    {
+        $joinedFee = JoinCrickContest::where('contest_id', $contest->id)
+            ->where('match_id', $contest->match_id)
+            ->whereHas('user', function ($query) {
+                $query->where('role', 2);
+            })
+            ->sum('entryfee_deposit');
+        return $contest->total_winning_prize < $joinedFee;
     }
 }

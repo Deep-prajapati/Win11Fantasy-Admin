@@ -42,6 +42,7 @@ class FootballContest extends Model
     ];
 
     protected $casts = [
+        'cancellation' => 'boolean',
         'is_cancelled' => 'boolean',
         'is_cancelable' => 'boolean',
         'is_free' => 'boolean',
@@ -49,25 +50,14 @@ class FootballContest extends Model
         'bonus_contest' => 'boolean',
         'auto_create' => 'boolean',
     ];
-    public function scopeMaxEntry($query)
-    {
-        return $query->addSelect([
-            'max_team' => ContestType::select('max_entries')
-                ->whereColumn('contest_type', 'contests.contest_type')
-                ->limit(1),
-        ]);
-    }
-    public function contestType()
-    {
-        return $this->belongsTo(ContestType::class, 'contest_type', 'id');
-    }
+
     public function defaultContest()
     {
         return $this->belongsTo(FootballDefaultContest::class, 'default_contest_id', 'id');
     }
     public function prizeBreakups()
     {
-        return $this->hasMany(FootballPrizeBreakup::class, ['default_contest_id', 'contest_type_id'], ['default_contest_id', 'contest_type']);
+        return $this->hasMany(FootballPrizeBreakup::class,'default_contest_id', 'default_contest_id');
     }
     public function scopeActive($query)
     {
@@ -75,7 +65,7 @@ class FootballContest extends Model
     }
     function userJoinedContests()
     {
-        // return $this->hasMany(JoinCrickContest::class, 'contest_id', 'id');
+        return $this->hasMany(FootballJoinContest::class, 'contest_id', 'id');
     }
     public function match()
     {

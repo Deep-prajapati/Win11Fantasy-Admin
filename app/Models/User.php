@@ -21,8 +21,8 @@ class User extends Authenticatable
         'role',
         'password',
         'ref_code',
-        'fcm_token',
         'invite_code',
+        "fcm_token"
     ];
     protected $hidden = [
         'otp_token',
@@ -67,9 +67,8 @@ class User extends Authenticatable
 
         return $prefix . $nextNumber;
     }
-
     public function routeNotificationForFcm()
     {
-        return $this->fcm_token; // assuming you have this column in your users table
+        return $this->fcm_token;
     }
 }

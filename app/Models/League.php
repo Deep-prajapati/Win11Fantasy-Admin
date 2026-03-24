@@ -15,13 +15,7 @@ class League extends Model
         'name',
         'code',
         'image_path',
-        'type',
-        'status'
-    ];
-    protected $casts = [
-        'league_id' => 'integer',
-        'season_id' => 'integer',
-        'status' => 'boolean',
+        'type'
     ];
 }
 

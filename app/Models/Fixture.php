@@ -8,11 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Notifications\LineupNotification;
+use Illuminate\Support\Facades\Notification;
+
 
 class Fixture extends Model
 {
     use HasFactory, Compoships;
-
     protected $fillable = [
         'fixture_id',
         'league_id',
@@ -63,7 +65,6 @@ class Fixture extends Model
         'is_prize_refund',
         'is_prize_distributed'
     ];
-
     protected $casts = [
         'is_prize_refund' => 'boolean',
         'is_prize_distributed' => 'boolean',
@@ -79,32 +80,48 @@ class Fixture extends Model
         'starting_at' => 'datetime',
     ];
 
-    protected $appends = ['lineup', 'mega', 'playing11', 'is_upcomming'];
+    protected $appends = ['lineup', 'mega', 'playing11', 'is_upcomming', 'scores'];
+
+
+    // public function getAttribute($key)
+    // {
+    //     $value = parent::getAttribute($key);
+    //     return is_null($value) ? '' : $value;
+    // }
+    protected function getNoteAttribute($value)
+    {
+        return is_null($value) ? '' : $value;
+    }
 
     public function getIsUpcommingAttribute()
     {
-        if ($this->is_live == 1) {
-            return false;
-        }
-        return ($this->is_completed == 0 && $this->is_cancelled  == 0);
+        return ($this->is_live  == false && $this->is_completed == false && $this->is_cancelled  == false);
     }
-
     public function getLineupAttribute()
     {
         if (($this->is_live  == true || $this->is_completed == true || $this->is_cancelled  == true)) {
             return false;
         }
-        return Playing11::where('fixture_id', $this->fixture_id)->count() > 0;// 22;
+        return Playing11::where('fixture_id', $this->fixture_id)->count() > 0; // 22;
     }
-
     public function getPlaying11Attribute()
     {
         return Playing11::where('fixture_id', $this->fixture_id)->pluck('player_id');
     }
-
     public function getMegaAttribute()
     {
-        return Contest::where('match_id', $this->fixture_id)->orderby('total_winning_prize', 'desc')->first()?->total_winning_prize ?? 1;
+        return Contest::where('match_id', $this->fixture_id)
+            ->orderBy('total_winning_prize', 'desc')
+            ->first()
+            ?->total_winning_prize ?? 1;
+    }
+    public function getScoresAttribute()
+    {
+        if (($this->is_live  == false && $this->is_completed == false && $this->is_cancelled  == false)) {
+            return [];
+        } else {
+            return CricRuns::where(['fixture_id' => $this->fixture_id])->get();
+        }
     }
 
     public function league(): BelongsTo
@@ -116,23 +133,22 @@ class Fixture extends Model
     {
         return $this->belongsTo(Season::class, 'season_id', 'season_id');
     }
-
     public function teama()
     {
         return $this->hasMany(Player::class, ['team_id', 'season_id'], ['localteam_id', 'season_id']);
     }
-
     public function teamb()
     {
         return $this->hasMany(Player::class, ['team_id', 'season_id'], ['visitorteam_id', 'season_id']);
     }
 
-    public function battings(){
-        return $this->hasMany(Batting::class,'fixture_id','fixture_id');
+    public function battings()
+    {
+        return $this->hasMany(Batting::class, 'fixture_id', 'fixture_id');
     }
-
-    public function bowlings(){
-        return $this->hasMany(Bowling::class,'fixture_id','fixture_id');
+    public function bowlings()
+    {
+        return $this->hasMany(Bowling::class, 'fixture_id', 'fixture_id');
     }
 
     public function players($teams = null)
@@ -143,7 +159,6 @@ class Fixture extends Model
             return $this->teama()->whereIn('player_id', $teams)->union($this->teamb()->whereIn('player_id', $teams))->get();
         }
     }
-
     public function contests()
     {
         return $this->hasMany(Contest::class, 'match_id', 'fixture_id');
@@ -151,37 +166,38 @@ class Fixture extends Model
 
     public function scopeUpcoming($query)
     {
-        return $query->where('fixtures.starting_at', '>', now())->Where('fixtures.status', 'NS')->orderBy('fixtures.starting_at', 'asc');
+        // return $query->where('starting_at', '>', now())
+        // ->where('live',false)
+        // ->Where('status', 'NS')
+        // ->orderBy('starting_at', 'asc');
+        return $query->where('starting_at', '>', now())
+            // ->orwhere('live', false)
+            // ->Where('status', 'NS')
+            ->orderBy('starting_at', 'asc');
     }
-
     public function scopeLive($query)
     {
         return $query->where('live', true)->Where('status', 'Live')->whereNull('winner_team_id');
     }
-
     public function scopeFinished($query)
     {
         return $query->whereNotNull('winner_team_id')
             ->orWhere('status', 'Finished');
     }
-
     public function scopeCancelled($query)
     {
         return $query->Where('status', 'Aban.');
     }
-
     protected function matchName(): Attribute
     {
         return Attribute::make(
             get: fn() => $this->localteam_name . ' vs ' . $this->visitorteam_name
         );
     }
-
     // public function winnerTeam(): BelongsTo
     // {
     //     return $this->belongsTo(Team::class, 'winner_team_id');
     // }
-
     /**
      * Get the localteam associated with the fixture
      */
@@ -202,16 +218,26 @@ class Fixture extends Model
     {
         return $this->belongsTo(Venue::class);
     }
-
     protected static function booted()
     {
         static::updated(function ($fixture) {
             if ($fixture->wasChanged('live') && !$fixture->getOriginal('live') && $fixture->live === true) {
-                Log::channel('fixture')->info('Fixture became live', ['fixture_id' => $fixture->fixture_id]);
+                $notAllowedLeagues = League::where('status', false)->pluck('league_id')->toArray();
+
+                // Skip if fixture's league is in not allowed list
+                if (in_array($fixture->league_id, $notAllowedLeagues)) {
+                    // Log::channel('fixture')->info('Notification skipped for disabled league', ['fixture_id' => $fixture->fixture_id]);
+                    return;
+                }
+                // Log::channel('fixture')->info('Fixture became live', ['fixture_id' => $fixture->fixture_id]);
+                $title = $fixture->localteam_code . ' vs ' . $fixture->visitorteam_code;
+                $body = "Lineup announced for $title match";
+                $data = [];
+                Notification::route('firebase', 'match_lineup')->notify(new LineupNotification($title, $body, $data));
             }
         });
-        // static::addGlobalScope('booleanColumns', function ($query) {
-        //     $query->addSelect('is_live', 'is_cancelled', 'is_completed');
-        // });
+        static::retrieved(function ($match) {
+            // $match->lineup = Playing11::where('fixture_id',$match->fixture_id)->count() == 11 ?  true : false ;
+        });
     }
 }

@@ -22,8 +22,11 @@ class Withdrawal extends Model
 
     ];
 
+    /**
+     * Get the user who made the withdrawal.
+     */
     public function user()
     {
-        return $this->belongsTo(User::class,'user_id','id');
+        return $this->belongsTo(User::class);
     }
 }
