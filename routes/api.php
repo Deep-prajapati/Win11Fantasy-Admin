@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController as ApiAuth;
 use App\Http\Controllers\Api\UserController as ApiUser;
 use App\Http\Controllers\Api\UserChatController as ApiUserChat;
 use App\Http\Controllers\Api\RechargeController as ApiRecharge;
+use App\Http\Controllers\Api\SettingController as ApiSetting;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\Sports\FootballSportsController;
 use App\Http\Controllers\Sports\OddsSportsController;
@@ -132,17 +133,22 @@ Route::prefix('football')->group(function () {
 
 });
 
-
 Route::get('appsettings',[CommonController::class,'getSettings']);
-Route::prefix('user')->group(function () {
+
+Route::prefix('user')->group(function () 
+{
     Route::post('login', [ApiAuth::class, 'login']);
     Route::post('otpverify', [ApiAuth::class, 'otpVerify']);
     Route::post('register', [ApiAuth::class, 'register']);
-    Route::group(['middleware' => 'auth:api'], function () {
+
+    Route::group(['middleware' => 'auth:api'], function () 
+    {
         Route::get('profile', [ApiUser::class, 'profile']);
         Route::post('profile-update', [ApiUser::class, 'profileUpdate']);
         Route::get('transaction', [ApiUser::class, 'transaction']);
-        Route::group(['prefix' => 'chat'], function () {
+
+        Route::group(['prefix' => 'chat'], function () 
+        {
             Route::get('/', [ApiUserChat::class, 'index']);
             Route::get('/users', [ApiUserChat::class, 'chatusers']);
             Route::post('/conversation', [ApiUserChat::class, 'conversation']);
@@ -150,9 +156,15 @@ Route::prefix('user')->group(function () {
             Route::post('/{conversation}/send', [ApiUserChat::class, 'sendMessage']);
             Route::get('/{conversation}/messages', [ApiUserChat::class, 'messages']);
         });
+
         Route::get('leaderboard',[ApiUser::class,'leaderboard']);
         Route::post('recharge',[ApiRecharge::class,'initiate']);
         Route::post('withdraw',[ApiRecharge::class,'withdraw']);
+
+        Route::group(['prefix' => 'setting'], function () 
+        {
+            Route::get('/upi', [ApiSetting::class, 'UPI']);
+        });
     });
 });
 Route::group(['prefix' => 'cricket'], function () {
