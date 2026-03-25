@@ -71,7 +71,7 @@ class AuthController extends Controller
                 $user->email = $credentials['email'] ?? null;
                 $user->otp_expired_at = $expiredAt;
                 $user->otp_token = $otp;
-                $user->ref_code = $request->invite_token ?? null;
+                $user->ref_code = $request->invite_token ?? '';
                 $user->save();
 
                 UserWallet::create([
@@ -139,38 +139,6 @@ class AuthController extends Controller
             return Helper::EmptyReturn('Invalid mobile number. Please check your mobile number.');
         }
 
-        // if (!$user) 
-        // {
-        //     $user = User::create([
-        //         'mobile_number' =>  $request->username,
-        //         'name' => 'User',
-        //         'email' => $credentials['email'] ?? null,
-        //     ]);
-
-        //     UserWallet::create([
-        //         'user_id' => $user->id
-        //     ]);
-        // }
-
-        // if (!empty($request->fcm_token) && $user->fcm_token !== $request->fcm_token) 
-        // {
-        //     $user->update(['fcm_token' => $request->fcm_token ?? '']);
-        // }
-
-        // if (!in_array($request->username, ['9636674261', '6377632486'])) 
-        // {
-        //     $res = $this->otpLess->sendOtp('+91' . $request->username);
-
-        //     if (!$res['success']) 
-        //     {
-        //         return Helper::EmptyReturn('Invalid mobile number. Please check your mobile number.');
-        //     }
-
-        //     $user->update([
-        //         'otp_token' => $res['token']
-        //     ]);
-        // }
-
         return Helper::SuccessReturn(null, 'Otp send on you mobile number.');
     }
 
@@ -216,18 +184,22 @@ class AuthController extends Controller
             if($user->is_new == 0) 
             {
                 $reffer = User::where('invite_code' , $user->ref_code)->first();
-                $bonus = SiteSettings::getValue('refer_bonus') ?? 0;
 
-                $wallet = UserWallet::where('user_id', $reffer->id)->first();
-                $wallet->balance = $wallet->balance + $bonus;
-                $wallet->save();
+                if($reffer) 
+                {
+                    $bonus = SiteSettings::getValue('refer_bonus') ?? 0;
 
-                Transection::create([
-                    'user_id' => $reffer->id,
-                    'type' => 1,
-                    'amount' => $bonus,
-                    'desc' => 'Reffer to ' . $user->name . 'and get ' . $bonus . ' bonus',
-                ]);
+                    $wallet = UserWallet::where('user_id', $reffer->id)->first();
+                    $wallet->balance = $wallet->balance + $bonus;
+                    $wallet->save();
+
+                    Transection::create([
+                        'user_id' => $reffer->id,
+                        'type' => 1,
+                        'amount' => $bonus,
+                        'desc' => 'Reffer to ' . $user->name . 'and get ' . $bonus . ' bonus',
+                    ]);
+                }
                 
                 $user->is_new = 1;
             }
@@ -249,7 +221,7 @@ class AuthController extends Controller
             );
 
         } catch (\Throwable $th) {
-            return Helper::FalseReturn(null, 'Something went wrong');
+            return Helper::FalseReturn(null, 'Something went wrong. Please try again.');
         }
     }
 
