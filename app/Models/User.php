@@ -11,6 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasApiTokens;
+
     protected $fillable = [
         'name',
         'email',
@@ -42,24 +43,29 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserWallet::class, 'user_id', 'id');
     }
+
     protected static function boot()
     {
         parent::boot();
         static::creating(function ($user) {
             $lastUser = static::latest('invite_code')->first();
-            if ($lastUser) {
-                $lastNumber = (int)substr($lastUser->invite_code, strlen('FOOKRI'));
+
+            if ($lastUser) 
+            {
+                $lastNumber = (int)substr($lastUser->invite_code, strlen('Win11Circle'));
                 $userCode = $lastNumber + 1;
-            } else {
+            } 
+            else 
+            {
                 $userCode = 2345;
             }
-            $user->invite_code = 'FOOKRI' . str_pad($userCode, 3, '0', STR_PAD_LEFT);
+            $user->invite_code = 'Win11Circle' . str_pad($userCode, 5, '0', STR_PAD_LEFT);
         });
     }
 
     private function generateRefCode()
     {
-        $prefix = 'FOOKRI';
+        $prefix = 'Win11Circle';
         $lastUser = User::whereNotNull('invite_code')->orderBy('id', 'desc')->first();
 
         $startValue = 2345;
@@ -67,6 +73,7 @@ class User extends Authenticatable
 
         return $prefix . $nextNumber;
     }
+
     public function routeNotificationForFcm()
     {
         return $this->fcm_token;

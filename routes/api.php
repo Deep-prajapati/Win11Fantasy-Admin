@@ -115,10 +115,10 @@ Route::get('/botJoinContest',[SportsmonkController::class,'botJoinContest']);
 Route::get('/resetBotsTeams',[SportsmonkController::class,'resetBotsTeams']);
 Route::get('/cancel-contest',[SportsmonkController::class,'cancelContest']);
 
-
 Route::prefix('odds')->group(function () {
     Route::get('types',[OddsSportsController::class,'getBaseTypes']);
 });
+
 Route::prefix('football')->group(function () {
     Route::get('matches',[FootballSportsController::class,'getMatches']);
     Route::get('matches/update',[FootballSportsController::class,'updateMatch']);
@@ -167,6 +167,7 @@ Route::prefix('user')->group(function ()
         });
     });
 });
+
 Route::group(['prefix' => 'cricket'], function () {
     Route::match(['get','post'],'/matches/{status}', [ApiMatch::class, 'index'])->where('status', 'live|upcoming|complete');
     Route::post('/match/{fixture_id}', [ApiMatch::class, 'matchdetails']);
@@ -176,6 +177,7 @@ Route::group(['prefix' => 'cricket'], function () {
     Route::post('contest/{contest_id}/price-details', [ApiMatch::class, 'priceDetails']);
     Route::post('match/{fixture_id}/get-score', [ApiMatch::class, 'getScore']);
 });
+
 Route::group(['middleware' => ['auth:api', UserBlocked::class]], function () {
     Route::group(['prefix' => 'cricket'], function () {
         Route::post('match/{fixture_id}/{contest_id}/view', [ApiMatch::class, 'mactchContestView']);
@@ -196,6 +198,7 @@ Route::group(['prefix' => 'football'], function () {
     Route::get('/match/{match_id}', [ApiFMatch::class, 'matchdetails']); 
     Route::get('match/{match_id}/get-score', [ApiFMatch::class, 'getScore']);
 });
+
 Route::group(['middleware' => ['auth:api',  UserBlocked::class]], function () {
     Route::group(['prefix' => 'football'], function () {
         Route::get('match/{match_id}/{contest_id}/view', [ApiFMatch::class, 'mactchContestView']);

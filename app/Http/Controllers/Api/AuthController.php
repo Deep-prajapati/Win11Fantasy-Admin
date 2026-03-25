@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use App\Models\SiteSettings;
+use App\Models\Transection;
 use App\Services\OtpLessService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
@@ -30,6 +31,7 @@ class AuthController extends Controller
                 'digits:10',
                 'regex:/^[6-9]\d{9}$/'
             ],
+            'invite_token' => ['nullable', 'string']
         ];
 
         $customMessages = [
@@ -56,16 +58,25 @@ class AuthController extends Controller
             
             if(!$user)
             {
+                $bonus = 0;
+
+                if(SiteSettings::getValue('signup_bonus') != null)
+                {
+                    $bonus = SiteSettings::getValue('signup_bonus');
+                }
+
                 $user = new User();
                 $user->mobile_number = $request->username;
                 $user->name = 'User';
                 $user->email = $credentials['email'] ?? null;
                 $user->otp_expired_at = $expiredAt;
                 $user->otp_token = $otp;
+                $user->ref_code = $request->invite_token ?? null;
                 $user->save();
 
                 UserWallet::create([
-                    'user_id' => $user->id
+                    'user_id' => $user->id,
+                    'balance' => $bonus
                 ]);
             }else{
                 $user->otp_expired_at = $expiredAt;
@@ -109,8 +120,7 @@ class AuthController extends Controller
 
             $response = Http::withToken($data->accessToken)->withHeaders([
                 'Content-Type' => 'application/json',
-            ])
-            ->post(
+            ])->post(
                 "https://graph.facebook.com/v19.0/{$data->phoneid}/messages",
                 $payload
             );
@@ -164,42 +174,6 @@ class AuthController extends Controller
         return Helper::SuccessReturn(null, 'Otp send on you mobile number.');
     }
 
-    public function register(Request $request)
-    {
-        $rules = [
-            'name' => ['required', 'string'],
-            'mobile' => ['required', Rule::unique('users', 'mobile_number'), 'regex:/^[6-9]\d{9}$/'],
-            // 'password' => ['required', 'min:6'],
-            // 'confirm_password' => ['required', 'same:password'],
-        ];
-
-        $validator = Validator::make($request->all(), $rules);
-
-        if ($validator->fails()) 
-        {
-            return Helper::FalseReturn(null, $validator->errors()->first());
-        }
-
-        $res = $this->otpLess->sendOtp('+91' . $request->mobile);
-
-        if (!$res['success']) 
-        {
-            return Helper::EmptyReturn('Invalid mobile number. Please check your mobile number.');
-        }
-
-        $user = User::create([
-            'name' => $request->name,
-            'mobile_number' => $request->mobile,
-            'otp_token' => $res['token']
-        ]);
-
-        UserWallet::create([
-            'user_id' => $user->id
-        ]);
-
-        return Helper::SuccessReturn(null, 'Otp send on you mobile number.');
-    }
-
     public function otpVerify(Request $request)
     {
         $rules = [
@@ -238,6 +212,26 @@ class AuthController extends Controller
             // ✅ Clear OTP after success
             $user->otp_token = null;
             $user->otp_expired_at = null;
+
+            if($user->is_new == 0) 
+            {
+                $reffer = User::where('invite_code' , $user->ref_code)->first();
+                $bonus = SiteSettings::getValue('refer_bonus') ?? 0;
+
+                $wallet = UserWallet::where('user_id', $reffer->id)->first();
+                $wallet->balance = $wallet->balance + $bonus;
+                $wallet->save();
+
+                Transection::create([
+                    'user_id' => $reffer->id,
+                    'type' => 1,
+                    'amount' => $bonus,
+                    'desc' => 'Reffer to ' . $user->name . 'and get ' . $bonus . ' bonus',
+                ]);
+                
+                $user->is_new = 1;
+            }
+
             $user->save();
 
             // ✅ Create Token
@@ -257,5 +251,41 @@ class AuthController extends Controller
         } catch (\Throwable $th) {
             return Helper::FalseReturn(null, 'Something went wrong');
         }
+    }
+
+    public function register(Request $request)
+    {
+        $rules = [
+            'name' => ['required', 'string'],
+            'mobile' => ['required', Rule::unique('users', 'mobile_number'), 'regex:/^[6-9]\d{9}$/'],
+            // 'password' => ['required', 'min:6'],
+            // 'confirm_password' => ['required', 'same:password'],
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) 
+        {
+            return Helper::FalseReturn(null, $validator->errors()->first());
+        }
+
+        $res = $this->otpLess->sendOtp('+91' . $request->mobile);
+
+        if (!$res['success']) 
+        {
+            return Helper::EmptyReturn('Invalid mobile number. Please check your mobile number.');
+        }
+
+        $user = User::create([
+            'name' => $request->name,
+            'mobile_number' => $request->mobile,
+            'otp_token' => $res['token']
+        ]);
+
+        UserWallet::create([
+            'user_id' => $user->id
+        ]);
+
+        return Helper::SuccessReturn(null, 'Otp send on you mobile number.');
     }
 }

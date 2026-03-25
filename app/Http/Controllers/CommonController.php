@@ -21,6 +21,7 @@ class CommonController extends Controller
             'paymentPlateform' => $this->getPaymentPlateform(),
         ], 'Data fatched.');
     }
+    
     protected function getPaymentPlateform()
     {
         return [
@@ -29,7 +30,6 @@ class CommonController extends Controller
             'upi_id' => 'games.fookri@okaxis',
         ];
     }
-
 
     public function test()
     {
