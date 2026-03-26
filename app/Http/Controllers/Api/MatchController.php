@@ -321,19 +321,25 @@ class MatchController extends Controller
     public function preview(Request $request, $fixture_id, $team_id)
     {
         $user = auth()->user();
+
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
-        if (!$fixture) {
+        
+        if (!$fixture) 
+        {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid request',
             ]);
         }
+
         $team = UserTeam::where([
             'match_id' => $fixture_id,
             'user_id' => $user->id,
             'id' => $team_id
         ])->first();
+
         $team->players = $fixture->players($team->teams);
+        
         return Helper::SuccessReturn($team, 'Team fatched.');
     }
     public function joinedContest(Request $request, $fixture_id)

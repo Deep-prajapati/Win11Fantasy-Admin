@@ -53,6 +53,6 @@ Schedule::job(new GetTeams)->everyMinute()->withoutOverlapping();
 // every half minute
 // Schedule::job(new GetLineUp)->everyThirtySeconds()->withoutOverlapping();
 Schedule::job(new GetBatBall)->everyThirtySeconds()->withoutOverlapping();
-Schedule::job(new GeneratePoints)->everyThirtySeconds()->withoutOverlapping();
 Schedule::job(new SetPointsRank)->everyThirtySeconds()->withoutOverlapping();
+Schedule::job(new GeneratePoints)->everyThirtySeconds()->withoutOverlapping();
 // Schedule::job(new FootBallSetPointsRank)->everyMinute()->withoutOverlapping();

@@ -34,10 +34,14 @@ class PrizeDistribute implements ShouldQueue
         try {
             $fixtures = Fixture::where(['is_completed' => true, 'is_prize_distributed' => false])->get();
             // $fixtures = Fixture::where('fixture_id',65546)->get();
-            foreach ($fixtures as  $match) {
+            foreach ($fixtures as  $match) 
+            {
                 $contests = Contest::where(['match_id' => $match->fixture_id, 'is_cancelled' => false])->with('prizeBreakups')->get();
-                foreach ($contests as $contest) {
-                    if (isset($contest->prizeBreakups)) {
+
+                foreach ($contests as $contest) 
+                {
+                    if (isset($contest->prizeBreakups)) 
+                    {
                         $lastRankUpto = $contest->prizeBreakups->last()->rank_upto;
                         $JoindContest = JoinCrickContest::where(['match_id' => $match->fixture_id, 'contest_id' => $contest->id])
                             ->with('user')
@@ -45,7 +49,8 @@ class PrizeDistribute implements ShouldQueue
                             ->orderBy('ranks', 'asc')
                             ->get();
 
-                        foreach ($JoindContest as $key => $data) {
+                        foreach ($JoindContest as $key => $data) 
+                        {
                             $amount = $this->PrizeForRank($data->ranks, $contest->prizeBreakups, $match->fixture_id, $contest->id);
                             $data->winning_amount = round($amount, 2);
                             $data->update();
@@ -62,6 +67,7 @@ class PrizeDistribute implements ShouldQueue
                         }
                     }
                 }
+
                 $match->is_prize_distributed = true;
                 $match->update();
             }
@@ -77,8 +83,6 @@ class PrizeDistribute implements ShouldQueue
                 'data' => $th->getMessage()
             ]);
         }
-        
-        // return $fixtures;
     }
 
     protected function PrizeForRank($rank, $prizeBreakups, $match, $contest)
