@@ -164,6 +164,7 @@ Route::prefix('user')->group(function ()
         Route::group(['prefix' => 'setting'], function () 
         {
             Route::get('/upi', [ApiSetting::class, 'UPI']);
+            Route::post('/version', [ApiSetting::class, 'Version']);
         });
     });
 });

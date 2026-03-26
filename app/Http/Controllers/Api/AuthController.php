@@ -190,7 +190,7 @@ class AuthController extends Controller
                     $bonus = SiteSettings::getValue('refer_bonus') ?? 0;
 
                     $wallet = UserWallet::where('user_id', $reffer->id)->first();
-                    $wallet->balance = $wallet->balance + $bonus;
+                    $wallet->bonus = $wallet->bonus + $bonus;
                     $wallet->save();
 
                     Transection::create([

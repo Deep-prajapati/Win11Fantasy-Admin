@@ -16,21 +16,21 @@
                             <th>MAX Team Entry</th>
                             <th>Free</th>
                             <th>Allowed Cancellation</th>
- 			    <th>Status</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
                         @if (count($contests) < 1)
                             <tr>
-                                <td colspan="10">
-                                    <div class="d-flex justify-content-center mt-3">
-                                        No default Contest record found.
-                                    </div>
-                                </td>
+                            <td colspan="10">
+                                <div class="d-flex justify-content-center mt-3">
+                                    No default Contest record found.
+                                </div>
+                            </td>
                             </tr>
-                        @endif
-        @foreach ($contests as $key => $contest)	
+                            @endif
+                            @foreach ($contests as $key => $contest)
                             <tr>
                                 <td>{{ $contests->firstItem() + $key }}</td>
                                 <td><a
@@ -46,38 +46,38 @@
                                         User</span></td>
                                 <td class="text-center">
                                     @if ($contest->is_free)
-                                        <span class="badge bg-label-success">Yes</span>
+                                    <span class="badge bg-label-success">Yes</span>
                                     @else
-                                        <span class="badge bg-label-danger">NO</span>
+                                    <span class="badge bg-label-danger">NO</span>
                                     @endif
                                 </td>
                                 <td class="text-center">
                                     @if ($contest->cancellation)
-                                        <span class="badge bg-label-success">Yes</span>
+                                    <span class="badge bg-label-success">Yes</span>
                                     @else
-                                        <span class="badge bg-label-danger">NO</span>
+                                    <span class="badge bg-label-danger">NO</span>
                                     @endif
                                 </td>
-<td class="text-center">
+                                <td class="text-center">
                                     @if ($contest->is_cancelled)
-                                        <span class="badge bg-label-danger">Cancelled</span>
+                                    <span class="badge bg-label-danger">Cancelled</span>
                                     @else
-                                        <span class="badge bg-label-success">Active</span>
+                                    <span class="badge bg-label-success">Active</span>
                                     @endif
                                 </td>
 
-<td>
-    @if (!$contest->is_cancelled && $contest->cancellation)
-        <button wire:click="confirmCancel({{ $contest->id }})" type="button"
-            class="btn btn-outline-danger">
-            Cancel
-        </button>
-    @endif
-</td>
+                                <td>
+                                    @if (!$contest->is_cancelled && $contest->cancellation)
+                                    <button wire:click="confirmCancel({{ $contest->id }})" type="button"
+                                        class="btn btn-outline-danger">
+                                        Cancel
+                                    </button>
+                                    @endif
+                                </td>
 
                             </tr>
-                        @endforeach
-    @if ($contests->hasPages())
+                            @endforeach
+                            @if ($contests->hasPages())
                             <tr>
                                 <td colspan="10">
                                     <div class="d-flex justify-content-center mt-3">
@@ -85,7 +85,7 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endif
+                            @endif
                     </tbody>
                 </table>
             </div>

@@ -17,6 +17,10 @@ class SiteSettings extends Component
     public $refer_bonus;
     public $signup_bonus;
 
+    public $version;
+    public $mendatory;
+    public $link;
+
     public function mount()
     {
         // Get general settings
@@ -33,6 +37,12 @@ class SiteSettings extends Component
         // Get bonuses
         $this->refer_bonus = SettingsModel::getValue('refer_bonus');
         $this->signup_bonus = SettingsModel::getValue('signup_bonus');
+
+        // Get otpless info
+        $version = json_decode(SettingsModel::getValue('version'), true);
+        $this->version = $version['version'] ?? '';
+        $this->mendatory = $version['mendatory'] ?? '';
+        $this->link = $version['link'] ?? '';
     }
 
     public function updateSettings()
@@ -66,6 +76,20 @@ class SiteSettings extends Component
         SettingsModel::updateOrCreate(['name' => 'signup_bonus'], ['value' => $this->signup_bonus]);
 
         Flasher::success('Bonus settings updated successfully.');
+    }
+
+    public function updateVersion()
+    {
+        // Save otpless info as JSON
+        $json = json_encode([
+            'version' => $this->version,
+            'mendatory' => $this->mendatory,
+            'link' => $this->link,
+        ]);
+
+        SettingsModel::updateOrCreate(['name' => 'version'], ['value' => $json]);
+
+        Flasher::success('Version info updated successfully.');
     }
 
     public function render()

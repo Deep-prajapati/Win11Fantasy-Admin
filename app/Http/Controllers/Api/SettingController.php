@@ -21,4 +21,18 @@ class SettingController extends Controller
             return Helper::EmptyReturn('Something went wrong.');
         }
     }
+
+    public function Version()
+    {
+        try {
+            if(SiteSettings::getValue('version') == null)
+            {
+                return Helper::EmptyReturn('No Version info found.');
+            }
+
+            return Helper::SuccessReturn(json_decode(SiteSettings::getValue('version')));
+        } catch (\Throwable $th) {
+            return Helper::EmptyReturn('Something went wrong.');
+        }
+    }
 }

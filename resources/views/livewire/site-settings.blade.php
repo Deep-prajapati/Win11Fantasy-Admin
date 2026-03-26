@@ -63,4 +63,34 @@
             </form>
         </div>
     </div>
+
+    <div class="card">
+        <h5 class="card-header">Version Settings</h5>
+        <div class="card-body">
+            <form wire:submit.prevent="updateVersion">
+                <div class="row mb-2">
+                    <div class="col-sm-5 mb-3">
+                        <label class="form-label">Version</label>
+                        <input type="text" class="form-control" wire:model.live="version" placeholder="Enter Version">
+                    </div>
+                    <div class="col-sm-2 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" @if ($mendatory) checked @endif wire:model.live="mendatory">
+                            <label class="form-check-label" for="cancellable">Is Mendatory</label>
+                            @error('cancellable')
+                                <div id="cancellable" class="form-text text-danger">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-sm-5 mb-3">
+                        <label class="form-label">Link</label>
+                        <input type="text" class="form-control" wire:model.live="link" placeholder="Enter link">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">Update Version Settings</button>
+            </form>
+        </div>
+    </div>
 </div>
