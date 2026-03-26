@@ -10,18 +10,22 @@ function joinedCricTeamCount($user_id, $match_id, $contest_id)
 {
     return JoinCrickContest::where(['match_id' => $match_id, 'user_id' => $user_id, 'contest_id' => $contest_id])->count();
 }
+
 function joinedFootballTeamCount($user_id, $match_id, $contest_id)
 {
     return FootballJoinContest::where(['match_id' => $match_id, 'user_id' => $user_id, 'contest_id' => $contest_id])->count();
 }
+
 function alreayJoinedContestWithTeam($user_id, $team_id, $match_id, $contest_id)
 {
     return JoinCrickContest::where(['created_team_id' => $team_id, 'match_id' => $match_id, 'user_id' => $user_id, 'contest_id' => $contest_id])->exists();
 }
+
 function alreayFootballJoinedContestWithTeam($user_id, $team_id, $match_id, $contest_id)
 {
     return FootballJoinContest::where(['created_team_id' => $team_id, 'match_id' => $match_id, 'user_id' => $user_id, 'contest_id' => $contest_id])->exists();
 }
+
 function todayUserCount()
 {
     return User::where('role', 2)->whereDate('created_at', Carbon::today())->count();
@@ -47,6 +51,7 @@ function menuActive($routeName, $type = null, $param = null)
         return $class;
     }
 }
+
 function userStatusBage($user)
 {
     if ($user->is_banned) {
@@ -55,6 +60,7 @@ function userStatusBage($user)
         return '<span class="badge bg-label-primary me-1">Active</span>';
     }
 }
+
 function rechargePaymentStatus($status)
 {
     switch ($status) {
@@ -91,6 +97,7 @@ function matchStatusBage($match)
         return '<span class="badge bg-label-primary me-1">Upcomming</span>';
     }
 }
+
 function matchStatusBageByStatus($status)
 {
     switch ($status) {
@@ -109,9 +116,10 @@ function matchStatusBageByStatus($status)
             break;
     }
 }
+
 function getUsersFilesUrl($data)
 {
-    return "https://user.fookri.com/" . $data;
+    return env('APP_URL') . "/" . $data;
 }
 
 function getContestForBotFill() {}
@@ -121,10 +129,12 @@ function checkUsersInContestForMatch($match_id, $contest_id)
         $query->where('role', 2);
     })->count();
 }
+
 function countBotUserJoinedInContestForMatch($match_id, $contest_id, $user_id)
 {
     return JoinCrickContest::where(['match_id' => $match_id, 'contest_id' => $contest_id, 'user_id' => $user_id])->count();
 }
+
 function botsAllowedInContest($match_id, $contest, $contest_type)
 {
     if (isset($contest->defaultContest)) {
@@ -143,8 +153,6 @@ function botsAllowedInContest($match_id, $contest, $contest_type)
     }
 }
 
-
-
 function getDefaultCredits($positionId)
 {
     switch ($positionId) {
@@ -161,8 +169,6 @@ function getDefaultCredits($positionId)
     }
 }
 
-
-
 function typeStore($data)
 {
     if (isset($data['id'])) {
@@ -176,4 +182,13 @@ function typeStore($data)
             'stat_group' => $data['stat_group'] ?? '',
         ]);
     }
+}
+
+function getsportmonksImage($imagePath)
+{
+    $defaultImage = asset('assets/img/placeholder.png');
+    if (empty($imagePath) || $imagePath === 'https://cdn.sportmonks.com' || $imagePath === 'https://cdn.sportmonks.com/') {
+        return $defaultImage;
+    }
+    return $imagePath;
 }

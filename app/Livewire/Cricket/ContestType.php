@@ -15,32 +15,37 @@ class ContestType extends Component
     protected $listeners = ['refreshComponent' => '$refresh'];
     public $contestIdToDelete;
 
-    public function confirmDelete($contestId)
+    public function mount()
+    {
+        if (request()->is('livewire/*')) {
+            abort(404); // prevent wrong context
+        }
+    }
 
+    public function confirmDelete($contestId)
     {
         $this->contestIdToDelete = $contestId;
-        sweetalert()
-            ->showDenyButton()
-            ->info('Are you sure you want to delete the user?');
+
+        sweetalert()->showDenyButton()->info('Are you sure you want to delete the user?');
     }
 
     #[On('sweetalert:confirmed')]
-public function onConfirmed(array $payload): void
-{
-    $contest = ModelsContestType::find($this->contestIdToDelete);
-    
-    if ($contest) {
-        if (filter_var($contest->cancellable, FILTER_VALIDATE_BOOLEAN)) {
-            $contest->is_deleted = 1;
-            $contest->save();  
-            Flasher::success('Contest cancelled successfully.');
+    public function onConfirmed(array $payload): void
+    {
+        $contest = ModelsContestType::find($this->contestIdToDelete);
+        
+        if ($contest) {
+            if (filter_var($contest->cancellable, FILTER_VALIDATE_BOOLEAN)) {
+                $contest->is_deleted = 1;
+                $contest->save();  
+                Flasher::success('Contest cancelled successfully.');
+            } else {
+                Flasher::error('This contest cannot be cancelled.');
+            }
         } else {
-            Flasher::error('This contest cannot be cancelled.');
+            Flasher::error('Contest not found.');
         }
-    } else {
-        Flasher::error('Contest not found.');
     }
-}
 
     #[On('sweetalert:denied')]
     public function onDeny(array $payload): void
@@ -52,7 +57,13 @@ public function onConfirmed(array $payload): void
     public function render()
     {
         $contestTypes = ModelsContestType::query();
-        $contestTypes = $contestTypes->paginate(env('PER_PAGE_RECORDS', 10))->withPath(request()->url());
+
+        $contestTypes = $contestTypes->paginate(env('PER_PAGE_RECORDS', 10))->withPath(
+            request()->is('livewire/*') 
+            ? url('cricket/contest-type') 
+            : url()->current()
+        );
+        // dump(url()->current());
         return view('livewire.cricket.contest-type', [
             'contestTypes' => $contestTypes
         ]);

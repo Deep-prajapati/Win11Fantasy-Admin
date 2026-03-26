@@ -64,7 +64,7 @@
                             <tr>
                                 <td colspan="10">
                                     <div class="d-flex justify-content-center mt-3">
-                                        {{ $contestTypes->appends(request()->query())->links('pagination::bootstrap-4') }}
+                                        {{ $contestTypes->links('pagination::bootstrap-4') }}
                                     </div>
                                 </td>
                             </tr>

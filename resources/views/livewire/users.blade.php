@@ -49,16 +49,15 @@
                                     {{ $users->firstItem() + $key }}
                                 </td>
                                 <td>
-                                    <img height="40" width="40" src="{{ getUsersFilesUrl($user->image) }}"
-                                        alt="{{ $user->name }}">
+                                    <img height="40" width="40" src="{{ getUsersFilesUrl($user->image) }}" alt="{{ $user->name ?? 'NA' }}">
                                 </td>
-                                <td>{{ $user->name }}</td>
+                                <td>{{ $user->name ?? 'NA' }}</td>
                                 <td>{{ $user->email ?? 'NA' }}</td>
-                                <td>{{ $user->country_code . ' ' . $user->mobile_number }}</td>
+                                <td>{{ $user->country_code ?? 'NA' . ' ' . $user->mobile_number ?? 'NA' }}</td>
                                 <td>
-                                    <div><strong>Balance:</strong> {{ number_format($user->account->balance, 2) }}</div>
-                                    <div><strong>Bonus:</strong> {{ number_format($user->account->bonus, 2) }}</div>
-                                    <div><strong>Winning:</strong> {{ number_format($user->account->winning, 2) }}</div>
+                                    <div><strong>Balance:</strong> {{ number_format($user->account->balance ?? 0, 2) }}</div>
+                                    <div><strong>Bonus:</strong> {{ number_format($user->account->bonus ?? 0, 2) }}</div>
+                                    <div><strong>Winning:</strong> {{ number_format($user->account->winning ?? 0, 2) }}</div>
                                 </td>
                                 <td>
                                     {!! userStatusBage($user) !!}

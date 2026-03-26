@@ -76,7 +76,7 @@ class AuthController extends Controller
 
                 UserWallet::create([
                     'user_id' => $user->id,
-                    'balance' => $bonus
+                    'bonus' => $bonus
                 ]);
             }else{
                 $user->otp_expired_at = $expiredAt;

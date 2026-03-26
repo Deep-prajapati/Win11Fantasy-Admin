@@ -64,6 +64,7 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
+
         'fixture' => [
             'driver' => 'single',
             'path' => storage_path('logs/fixtures.log'),
@@ -77,6 +78,7 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
+            'tap' => [App\Logging\CustomizeFormatter::class],
         ],
 
         'slack' => [
@@ -132,7 +134,5 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
-
     ],
-
 ];

@@ -18,12 +18,14 @@ class UsersController extends Controller
         // $users = User::where('role', '2')->paginate(env('PER_PAGE_RECORDS', 10));
         return view('users.index', compact('title'));
     }
+
     public function botsUser(Request $request)
     {
         $title = "Bot User List";
         $users = User::where('role', '3')->paginate(env('PER_PAGE_RECORDS', 10));
         return view('users.botuser.index', compact('title', 'users'));
     }
+    
     public function block(Request $request, $user_id)
     {
         $user = User::where(['id' => $user_id, 'role' => 2, 'is_banned' => false])->first();
