@@ -1,4 +1,5 @@
 @extends('layouts.app')
+
 @section('contents')
     <div class="row mb-2">
         <div class="col-sm-12">
@@ -138,7 +139,11 @@
                                     <td>{{ $data->user->country_code . ' ' . $data->user->mobile_number }}</td>
                                     <td>&#8377; {{ $contest->entry_fees }} </td>
                                     <td>{{ $data->user->name }} ({{ $data->team_count }})</td>
-                                    <td>{{ $data->points }}</td>
+                                    <td>
+                                        <a href="{{ route('admin.cricket.match.contests.team.view', ['fixture_id' => $match->fixture_id, 'contest_id' => $contest->id, 'team_id' => $data->team->id]) }}">
+                                            {{ $data->points }}
+                                        </a>
+                                    </td>
                                     <td>#{{ $data->ranks }}</td>
                                     <td>&#8377; {{ $data->winning_amount }}</td>
                                     <td>{{ $data->user->role == 3 ? 'BOT' : 'User' }}</td>

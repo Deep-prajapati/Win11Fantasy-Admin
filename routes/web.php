@@ -72,6 +72,7 @@ Route::group(['as' => 'admin.'], function ()
             {
                 Route::get('/', [CricketController::class, 'matchContests'])->name('list');
                 Route::get('/{contest_id}/view', [CricketController::class, 'matchContestView'])->name('view');
+                Route::get('/{contest_id}/{team_id}/team', [CricketController::class, 'matchTeamView'])->name('team.view');
                 Route::post('/add-manual', [CricketController::class, 'matchContestAddManual'])->name('add');
             });
 

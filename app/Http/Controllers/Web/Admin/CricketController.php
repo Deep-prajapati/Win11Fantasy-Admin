@@ -15,6 +15,8 @@ use Illuminate\Validation\Rule;
 use App\Models\JoinCrickContest;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\Playerspoint;
+use App\Models\UserTeam;
 use Illuminate\Support\Facades\Validator;
 
 class CricketController extends Controller
@@ -119,7 +121,6 @@ class CricketController extends Controller
 
     public function matchContestView(Request $request, $fixture_id, $contest_id)
     {
-
         $match =  Fixture::where('fixture_id', $fixture_id)->first();
         if (!$match) {
             flash()->error('Match not found.');
@@ -137,6 +138,34 @@ class CricketController extends Controller
         })->sum('winning_amount');
 
         return view('cricket.matches.contest_view', compact('title', 'match', 'contest', 'joinedUsers', 'totalWinnings', 'totalEntryAmount'));
+    }
+
+    public function matchTeamView(Request $request, $fixture_id, $contest_id ,$team_id)
+    {
+        $title = "User Team View";
+
+        $match =  Fixture::where('fixture_id', $fixture_id)->first();
+
+        if (!$match) 
+        {
+            flash()->error('Match not found.');
+            return redirect()->route('admin.cricket.matches');
+        }
+
+        $contest = Contest::where(['match_id' => $fixture_id, 'id' => $contest_id])->first();
+        
+        $team = UserTeam::where([
+            'match_id' => $fixture_id,
+            'id' => $team_id
+        ])->first();
+
+        $team->players = $match->players($team->teams);
+        
+        $points = Playerspoint::where(['fixture_id' => $fixture_id])->whereIn('player_id', $team->teams)->pluck('points', 'player_id');
+
+        $user = $team->user()->first();
+        // dd($team , $points , $user , $fixture_id , $team_id, $match , $contest);
+        return view('cricket.matches.team_view', compact('title', 'match', 'contest', 'team', 'points', 'user'));
     }
 
     public function getseasons(Request $request)
