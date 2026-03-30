@@ -50,8 +50,7 @@ class RankGenerate implements ShouldQueue
                         $entries = DB::table('join_crick_contests')->select('id', 'user_id', 'created_team_id', 'points')
                             ->selectRaw("FIND_IN_SET(points, '$pointsString') as ranks")
                             ->where(['match_id' => $match->fixture_id, 'contest_id' => $contest])
-                            ->orderBy('ranks', 'asc')->orderBy('points' , 'desc')
-                            ->get();
+                        ->orderBy('points', 'desc')->get();
 
                         foreach ($entries as $key => $entry) 
                         {

@@ -30,34 +30,5 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (AuthenticationException $e, Request $request) {
-            if ($request->is('api/*')) {
-                return response()->json(['success' => FALSE, 'status' => config('constant.STATUS_UNAUTHORIZED'), 'message' => __("message.UNAUTHORIZED_ACCESS")], config('constant.STATUS_UNAUTHORIZED'));
-            }
-        });
-        $exceptions->render(function (RouteNotFoundException $e, Request $request) {
-
-            if ($request->is('api/*')) {
-                return response()->json(['success' => FALSE, 'status' =>  config('constant.STATUS_NOT_FOUND'), 'message' => __("message.PAGE_NOT_FOUND")], config('constant.STATUS_NOT_FOUND'));
-            }
-        });
-
-        $exceptions->render(function (ThrottleRequestsException $e, Request $request) {
-            if ($request->is('api/*')) {
-                return response()->json(['success' => FALSE, 'status' => config('constant.TOO_MANY_REQUESTS'), 'message' => __("message.TOO_MANY_REQUESTS")],  config('constant.TOO_MANY_REQUESTS'));
-            }
-        });
-
-
-        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
-            if ($request->is('api/*')) {
-                return response()->json(['success' => FALSE, 'status' => config('constant.STATUS_NOT_FOUND'), 'message' => __("message.PAGE_NOT_FOUND")], config('constant.STATUS_NOT_FOUND'));
-            }
-        });
-
-        $exceptions->render(function (MethodNotAllowedHttpException $e, Request $request) {
-            if ($request->is('api/*')) {
-                return response()->json(['success' => FALSE, 'status' => config('constant.STATUS_METHOD_NOT_ALLOWED'), 'message' => __("message.METHOD_NOT_ALLOWED")], config('constant.STATUS_METHOD_NOT_ALLOWED'));
-            }
-        });
+        
     })->create();

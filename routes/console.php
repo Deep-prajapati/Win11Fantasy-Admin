@@ -30,7 +30,7 @@ Schedule::job(new CreateContest)->hourly()->withoutOverlapping();
 
 
 // ⏱️ 5 Min
-Schedule::job(new RankGenerate)->everyFiveMinutes()->withoutOverlapping();
+Schedule::job(new RankGenerate)->everyMinute()->withoutOverlapping();
 Schedule::job(new PrizeDistribute)->everyFiveMinutes()->withoutOverlapping();
 // Schedule::job(new FootballPrizeDistribute)->everyFiveMinutes()->withoutOverlapping();
 

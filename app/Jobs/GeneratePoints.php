@@ -33,13 +33,16 @@ class GeneratePoints implements ShouldQueue
             // $livematchs =  Fixture::where('is_live', true)->whereDate('starting_at', Carbon::now())->select('fixture_id', 'localteam_id', 'visitorteam_id')->get();
             $livematchs =  Fixture::where('is_live', true)->select('fixture_id', 'localteam_id', 'visitorteam_id')->get();
             // $livematchs = Fixture::where('fixture_id', 62242)->orderby('starting_at', 'asc')->select('fixture_id', 'localteam_id', 'visitorteam_id')->get();
-            foreach ($livematchs as $key => $match) {
-                if (count($match->playing11) > 0) {
+            foreach ($livematchs as $key => $match) 
+            {
+                if (count($match->playing11) > 0) 
+                {
                     // $pointsbat = $this->battingPoints($match->fixture_id, $players);
                     //    return $pointsbowl = $this->bowlingPoints($match->fixture_id, $players);
                     $points = $this->getFantasyPoints($match->fixture_id, $match->playing11);
 
-                    DB::transaction(function () use ($points, $match) {
+                    DB::transaction(function () use ($points, $match) 
+                    {
                         foreach ($points as $point) {
                             Playerspoint::updateOrCreate([
                                 'team_id' => $point->team_id,

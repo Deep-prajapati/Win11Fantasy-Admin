@@ -84,9 +84,6 @@ class CreateContest implements ShouldQueue
             Log::info([
                 'Job' => 'CreateContest',
                 'Message' => 'Contest Created',
-                'data' => [
-                    'matches' => $matches
-                ]
             ]);
         } catch (\Throwable $th) {
             Log::info([

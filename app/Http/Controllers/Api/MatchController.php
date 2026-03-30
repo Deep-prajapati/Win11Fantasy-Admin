@@ -19,6 +19,7 @@ use Illuminate\Validation\Rule;
 use App\Models\JoinCrickContest;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\Playerspoint;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -66,6 +67,7 @@ class MatchController extends Controller
         $matches = $matches->with('teama', 'teamb')->take(20)->get();
         return Helper::SuccessReturn($matches, 'match list fatched.');
     }
+    
     public function matchdetails(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
@@ -104,6 +106,7 @@ class MatchController extends Controller
             ->first();
         return Helper::SuccessReturn($match, 'match data fatched.');
     }
+
     public function players(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
@@ -133,19 +136,25 @@ class MatchController extends Controller
         $data['playing11']['a'] = Playing11::where(['fixture_id' => $fixture_id, 'team_id' => $fixture->localteam_id])->pluck('player_id');
         $data['playing11']['b'] = Playing11::where(['fixture_id' => $fixture_id, 'team_id' => $fixture->visitorteam_id])->pluck('player_id');
     }
+
     public function playing11(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
-        if (!$fixture) {
+
+        if (!$fixture) 
+        {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid request',
             ]);
         }
+
         $data['playing11']['a'] = Playing11::where(['fixture_id' => $fixture_id, 'team_id' => $fixture->localteam_id])->pluck('player_id');
         $data['playing11']['b'] = Playing11::where(['fixture_id' => $fixture_id, 'team_id' => $fixture->visitorteam_id])->pluck('player_id');
+
         return Helper::SuccessReturn($data, 'data list fatched.');
     }
+
     public function contests(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
@@ -181,6 +190,7 @@ class MatchController extends Controller
         }
         return Helper::SuccessReturn(['contests' => $contests, 'userContests' => $userContests], 'contest list fatched.');
     }
+
     public function priceDetails(Request $request, $contest_id)
     {
         $contest = Contest::active()->where('id', $contest_id)->first();
@@ -193,6 +203,7 @@ class MatchController extends Controller
         $pricedetails = PrizeBreakup::where(['contest_type_id' => $contest->contest_type, 'default_contest_id' => $contest->default_contest_id])->get();
         return $pricedetails;
     }
+
     public function createTeam(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
@@ -240,6 +251,7 @@ class MatchController extends Controller
         ]);
         return Helper::SuccessReturn('', 'Team created successfully.');
     }
+
     public function updateTeam(Request $request, $fixture_id)
     {
 
@@ -291,6 +303,7 @@ class MatchController extends Controller
         ]);
         return Helper::SuccessReturn('', 'Team updated successfully.');
     }
+
     public function getTeam(Request $request, $fixture_id)
     {
         // Log::channel('fixture')->info('Request header', $request->header());
@@ -305,6 +318,7 @@ class MatchController extends Controller
         $teams = UserTeam::withCaptionsImg()->where(['match_id' => $fixture_id, 'user_id' => $user->id])->get();
         return Helper::SuccessReturn($teams, 'Team list fatched for current match.');
     }
+
     public function getScore(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
@@ -318,6 +332,7 @@ class MatchController extends Controller
         $scores['bowling'] = Bowling::where('fixture_id', $fixture_id)->get();
         return Helper::SuccessReturn($scores, 'data fatched');
     }
+
     public function preview(Request $request, $fixture_id, $team_id)
     {
         $user = auth()->user();
@@ -334,14 +349,21 @@ class MatchController extends Controller
 
         $team = UserTeam::where([
             'match_id' => $fixture_id,
-            'user_id' => $user->id,
             'id' => $team_id
         ])->first();
 
         $team->players = $fixture->players($team->teams);
         
-        return Helper::SuccessReturn($team, 'Team fatched.');
+        $points = Playerspoint::where(['fixture_id' => $fixture_id])->whereIn('player_id', $team->teams)->pluck('points', 'player_id');
+
+        $data = [
+            'team' => $team,
+            'player_point' => $points,
+        ];
+        
+        return Helper::SuccessReturn($data, 'Team fatched.');
     }
+
     public function joinedContest(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
@@ -355,6 +377,7 @@ class MatchController extends Controller
         $data = JoinCrickContest::where(['user_id' => $user->id, 'match_id' => $fixture_id])->get();
         return Helper::SuccessReturn($data, 'data fatched');
     }
+
     public function addJoinContest(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
@@ -417,6 +440,7 @@ class MatchController extends Controller
         $contest->save();
         return Helper::SuccessReturn($data, 'Contest joined successfully.');
     }
+
     public function mymatches(Request $request)
     {
         $user = auth()->user();
@@ -476,43 +500,51 @@ class MatchController extends Controller
 
         return Helper::SuccessReturn($fixtures, 'data fatched.');
     }
+
     public function mactchContestView(Request $request, $fixture_id, $contest_id)
     {
         $matchData = Fixture::where('fixture_id', $fixture_id)
-            ->orderby('fixtures.starting_at', 'asc')
-            ->join('leagues', 'fixtures.league_id', '=', 'leagues.league_id')
-            ->select(
-                'fixtures.localteam_name',
-                'fixtures.localteam_code',
-                'fixtures.localteam_image_path',
-                'fixtures.visitorteam_name',
-                'fixtures.visitorteam_code',
-                'fixtures.visitorteam_image_path',
-                'fixtures.starting_at',
-                'fixtures.localteam_id',
-                'fixtures.visitorteam_id',
-                'fixtures.fixture_id',
-                'fixtures.league_id',
-                'fixtures.note',
-                'fixtures.season_id',
-                'fixtures.round',
-                'fixtures.note',
-                'fixtures.live',
-                'fixtures.status',
-                'fixtures.is_live',
-                'fixtures.is_cancelled',
-                'fixtures.is_completed',
-                'leagues.name as league_name',
-                'leagues.code as league_code'
-            )->first();
-        if (!$matchData) {
+        ->orderby('fixtures.starting_at', 'asc')
+        ->join('leagues', 'fixtures.league_id', '=', 'leagues.league_id')
+        ->select(
+            'fixtures.localteam_name',
+            'fixtures.localteam_code',
+            'fixtures.localteam_image_path',
+            'fixtures.visitorteam_name',
+            'fixtures.visitorteam_code',
+            'fixtures.visitorteam_image_path',
+            'fixtures.starting_at',
+            'fixtures.localteam_id',
+            'fixtures.visitorteam_id',
+            'fixtures.fixture_id',
+            'fixtures.league_id',
+            'fixtures.note',
+            'fixtures.season_id',
+            'fixtures.round',
+            'fixtures.note',
+            'fixtures.live',
+            'fixtures.status',
+            'fixtures.is_live',
+            'fixtures.is_cancelled',
+            'fixtures.is_completed',
+            'leagues.name as league_name',
+            'leagues.code as league_code'
+        )->first();
+
+        if (!$matchData) 
+        {
             return Helper::EmptyReturn('Invalid match details');
         }
+
         $contest = Contest::where(['id' => $contest_id, 'match_id' => $fixture_id])->active()->with('contestType', 'defaultContest', 'prizeBreakups')->first();
-        if (!$contest) {
+
+        if (!$contest) 
+        {
             return Helper::EmptyReturn('Invalid contest details');
         }
+
         $joined_contest_teams = JoinCrickContest::where(['contest_id' => $contest_id, 'match_id' => $fixture_id])->orderby('ranks', 'asc')->with('user', 'team')->get();
+
         return Helper::SuccessReturn([
             'matchData' => $matchData,
             'contest' => $contest,

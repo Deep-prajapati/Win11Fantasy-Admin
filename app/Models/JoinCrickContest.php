@@ -51,12 +51,14 @@ class JoinCrickContest extends Model
         'is_inv_cal'        => 'boolean',
         'is_inv_cal_mon'    => 'boolean',
     ];
-
     
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class,'user_id','id');
     }
-    public function team(){
+
+    public function team()
+    {
         return $this->belongsTo(UserTeam::class,'created_team_id','id')->withCaptionsImg();
     }
 

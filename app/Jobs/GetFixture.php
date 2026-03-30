@@ -161,7 +161,6 @@ class GetFixture implements ShouldQueue
                 Log::info([
                     'Job' => 'GetFixture',
                     'Message' => 'All data fatched',
-                    'data' => json_encode($response)
                 ]);
             } else {
                 Log::info([
