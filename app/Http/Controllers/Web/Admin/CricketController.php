@@ -251,11 +251,15 @@ class CricketController extends Controller
     {
         $title = "Default Contest Edit";
         $contest = DefaultContest::where('id', $contest_id)->first();
-        if (!$contest) {
+
+        if (!$contest) 
+        {
             flash()->error('Invalid Contest details.');
             return redirect()->route('admin.cricket.default.contest.index');
         }
-        if ($request->isMethod('POST')) {
+
+        if ($request->isMethod('POST')) 
+        {
             $rules = [
                 'contest_type'     => 'required|integer',
                 'mrp'             => 'required|numeric|min:0',
@@ -266,6 +270,7 @@ class CricketController extends Controller
                 'total_bots'     => 'required|integer|min:0',
                 'is_bonus_contest' => 'nullable|in:on',
                 'is_cloneable' => 'nullable|in:on',
+                'is_felexible' => 'nullable|in:on',
                 'is_free' => 'nullable|in:on',
                 'cancellation' => 'nullable|in:on',
                 'from_rank'       => 'required|array',
@@ -275,7 +280,9 @@ class CricketController extends Controller
                 'to_rank.*'       => 'required|integer|min:1',
                 'prize.*'         => 'required|numeric|min:1',
             ];
+
             $request->validate($rules);
+
             if (
                 count($request->from_rank) !== count($request->to_rank) ||
                 count($request->to_rank) !== count($request->prize)
@@ -283,6 +290,7 @@ class CricketController extends Controller
                 flash()->error('Prize breakups info incorrect.');
                 return redirect()->back()->withInput();
             }
+
             $contest->update([
                 'contest_type' => $request->contest_type,
                 'mrp' => $request->mrp,
@@ -298,6 +306,7 @@ class CricketController extends Controller
                 'extra_cash' => 0,
                 'bonus_contest' => isset($request->is_bonus_contest),
                 'is_cloneable' => isset($request->is_cloneable),
+                'is_felexible' => isset($request->is_felexible),
                 'usable_bonus' => $request->usable_bonus,
                 'bot_user' => $request->total_bots,
             ]);
@@ -305,7 +314,12 @@ class CricketController extends Controller
             // Update Prize Breakup
             PrizeBreakup::where('default_contest_id', $contest->id)->delete(); // Remove old data
 
-            foreach ($request->from_rank as $key => $value) {
+            $totalprize = 0;
+            foreach ($request->from_rank as $key => $value) 
+            {
+                $count = ($request->to_rank[$key] - $value + 1);
+                $totalprize += ($request->prize[$key] * $count);
+
                 PrizeBreakup::create([
                     'default_contest_id' => $contest->id,
                     'contest_type_id' => $request->contest_type,
@@ -314,17 +328,37 @@ class CricketController extends Controller
                     'prize_amount' => $request->prize[$key],
                 ]);
             }
+            
+            $contest->total_winning_prize = $totalprize;
+            $contest->save();
+
             flash()->success('Contest updated successfully.');
             return redirect()->route('admin.cricket.default.contest.index');
         }
+
         $contest->load('prizeBreakup');
         $contest_types = ContestType::where('is_deleted', false)->get();
-        return view('cricket.contests.edit', compact('title', 'contest', 'contest_types'));
+
+        $dis_amount = 0;
+        $dis_commission = 0;
+        $admin_commission = 0;
+
+        foreach ($contest->prizeBreakup as $prize) 
+        {
+            $count = ($prize->rank_upto - $prize->rank_from + 1);
+            $dis_commission += ($prize->prize_amount * $count);
+        }
+
+        $admin_commission = 100 - $dis_commission;
+        $dis_amount = (((int)$contest->total_spots * (int)$contest->entry_fees) * $dis_commission) / 100;
+        
+        return view('cricket.contests.edit', compact('title', 'contest', 'contest_types', 'dis_amount', 'dis_commission', 'admin_commission'));
     }
 
     public function defaultContestAdd(Request $request)
     {
-        if ($request->isMethod('POST')) {
+        if ($request->isMethod('POST')) 
+        {
             $rules = [
                 'contest_type'     => 'required|integer',
                 'mrp'             => 'required|numeric|min:0',
@@ -335,6 +369,7 @@ class CricketController extends Controller
                 'total_bots'     => 'required|integer|min:0',
                 'is_bonus_contest' => 'nullable|in:on',
                 'is_cloneable' => 'nullable|in:on',
+                'is_felexible' => 'nullable|in:on',
                 'is_free' => 'nullable|in:on',
                 'cancellation' => 'nullable|in:on',
                 'from_rank'       => 'required|array',
@@ -344,7 +379,9 @@ class CricketController extends Controller
                 'to_rank.*'       => 'required|integer|min:1',
                 'prize.*'         => 'required|numeric|min:1',
             ];
+
             $request->validate($rules);
+
             if (
                 count($request->from_rank) !== count($request->to_rank) ||
                 count($request->to_rank) !== count($request->prize)
@@ -352,6 +389,7 @@ class CricketController extends Controller
                 flash()->error('prize breakups info incorrect.');
                 return redirect()->back()->withInput();
             }
+
             $default_Contest = DefaultContest::create([
                 'contest_type' => $request->contest_type,
                 'mrp' => $request->mrp,
@@ -367,10 +405,18 @@ class CricketController extends Controller
                 'extra_cash' => 0,
                 'bonus_contest' => (isset($request->is_bonus_contest)) ? true : false,
                 'is_cloneable' => (isset($request->is_cloneable)) ? true : false,
+                'is_felexible' => (isset($request->is_felexible)) ? true : false,
                 'usable_bonus' => $request->usable_bonus,
                 'bot_user' => $request->total_bots,
             ]);
-            foreach ($request->from_rank as $key => $value) {
+
+            $totalprize = 0;
+            
+            foreach ($request->from_rank as $key => $value) 
+            {
+                $count = ($request->to_rank[$key] - $value + 1);
+                $totalprize += ($request->prize[$key] * $count);
+
                 PrizeBreakup::create([
                     'default_contest_id' => $default_Contest->id,
                     'contest_type_id' => $request->contest_type,
@@ -379,9 +425,16 @@ class CricketController extends Controller
                     'prize_amount' => $request->prize[$key],
                 ]);
             }
+
+            $dc = DefaultContest::where('id', $default_Contest->id)->first();
+            $dc->total_winning_prize = $totalprize;
+            $dc->save();
+
             flash()->success('New Default contest added successfully.');
             return redirect()->route('admin.cricket.default.contest.index');
-        } else {
+        } 
+        else 
+        {
             $title = "Default Contest add";
             $contest_types = ContestType::where('is_deleted', false)->get();
             return view('cricket.contests.add', compact('title', 'contest_types'));

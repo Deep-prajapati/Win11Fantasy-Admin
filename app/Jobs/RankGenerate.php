@@ -76,11 +76,13 @@ class RankGenerate implements ShouldQueue
             }
 
             Log::info([
+                'status' => 'success',
                 'Job' => 'RankGenerate',
                 'Message' => 'Rank Generate successfully'
             ]);
         } catch (\Throwable $th) {
             Log::info([
+                'status' => 'error',
                 'Job' => 'RankGenerate',
                 'Message' => 'Failed to fatch data',
                 'data' => $th->getMessage()

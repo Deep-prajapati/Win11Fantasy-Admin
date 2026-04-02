@@ -33,7 +33,7 @@ class PrizeDistribute implements ShouldQueue
     {
         try {
             $fixtures = Fixture::where(['is_completed' => true, 'is_prize_distributed' => false])->get();
-            // $fixtures = Fixture::where('fixture_id',65546)->get();
+            
             foreach ($fixtures as  $match) 
             {
                 $contests = Contest::where(['match_id' => $match->fixture_id, 'is_cancelled' => false])->with('prizeBreakups')->get();
@@ -42,27 +42,51 @@ class PrizeDistribute implements ShouldQueue
                 {
                     if (isset($contest->prizeBreakups)) 
                     {
-                        $lastRankUpto = $contest->prizeBreakups->last()->rank_upto;
-                        $JoindContest = JoinCrickContest::where(['match_id' => $match->fixture_id, 'contest_id' => $contest->id])
-                            ->with('user')
-                            ->where('ranks', '<=', $lastRankUpto)
-                            ->orderBy('ranks', 'asc')
-                            ->get();
-
-                        foreach ($JoindContest as $key => $data) 
+                        if($contest->is_felexible)
                         {
-                            $amount = $this->PrizeForRank($data->ranks, $contest->prizeBreakups, $match->fixture_id, $contest->id);
-                            $data->winning_amount = round($amount, 2);
-                            $data->update();
-                            if ($data->user->role == 2) {
-                                UserWallet::where('user_id', $data->user_id)
-                                    ->increment('winning', $amount);
-                                Transection::create([
-                                    'user_id' => $data->user_id,
-                                    'type' => 1,
-                                    'amount' => $amount,
-                                    'desc' => 'Contest winning | ' . $match->localteam_code . ' - ' . $match->visitorteam_code,
-                                ]);
+                            $lastRankUpto = $contest->prizeBreakups->last()->rank_upto;
+                            $JoindContest = JoinCrickContest::where(['match_id' => $match->fixture_id, 'contest_id' => $contest->id])
+                            ->with('user')->where('ranks', '<=', $lastRankUpto)
+                            ->orderBy('ranks', 'asc')->get();
+                            
+                            $totaljoined = count($JoindContest) * $contest->entry_fees;
+                            
+                            foreach($JoindContest as $key => $data) 
+                            {
+                                $amount = $this->flexiablePrizeForRank($data->ranks, $contest->prizeBreakups, $match->fixture_id, $contest->id, $totaljoined);
+                                $data->winning_amount = round($amount, 2);
+                                $data->update();
+                                if ($data->user->role == 2) {
+                                    UserWallet::where('user_id', $data->user_id)->increment('winning', $amount);
+                                    Transection::create([
+                                        'user_id' => $data->user_id,
+                                        'type' => 1,
+                                        'amount' => $amount,
+                                        'desc' => 'Contest winning | ' . $match->localteam_code . ' - ' . $match->visitorteam_code,
+                                    ]);
+                                }
+                            }
+                        }else{
+                            $lastRankUpto = $contest->prizeBreakups->last()->rank_upto;
+                            $JoindContest = JoinCrickContest::where(['match_id' => $match->fixture_id, 'contest_id' => $contest->id])
+                            ->with('user')->where('ranks', '<=', $lastRankUpto)
+                            ->orderBy('ranks', 'asc')->get();
+
+                            foreach ($JoindContest as $key => $data) 
+                            {
+                                $amount = $this->PrizeForRank($data->ranks, $contest->prizeBreakups, $match->fixture_id, $contest->id);
+                                $data->winning_amount = round($amount, 2);
+                                $data->update();
+                                if ($data->user->role == 2) {
+                                    UserWallet::where('user_id', $data->user_id)
+                                        ->increment('winning', $amount);
+                                    Transection::create([
+                                        'user_id' => $data->user_id,
+                                        'type' => 1,
+                                        'amount' => $amount,
+                                        'desc' => 'Contest winning | ' . $match->localteam_code . ' - ' . $match->visitorteam_code,
+                                    ]);
+                                }
                             }
                         }
                     }
@@ -73,11 +97,13 @@ class PrizeDistribute implements ShouldQueue
             }
 
             Log::info([
+                'status' => 'success',
                 'Job' => 'PrizeDistribute',
                 'Message' => 'Prize Distributed Successfully',
             ]);
         } catch (\Throwable $th) {
             Log::info([
+                'status' => 'error',
                 'Job' => 'PrizeDistribute',
                 'Message' => 'Failed to fatch data',
                 'data' => $th->getMessage()
@@ -86,19 +112,24 @@ class PrizeDistribute implements ShouldQueue
     }
 
     protected function PrizeForRank($rank, $prizeBreakups, $match, $contest)
-    {
+    {  
         $prizeTier = collect($prizeBreakups)->first(function ($prize) use ($rank) {
             return $rank >= $prize['rank_from'] && $rank <= $prize['rank_upto'];
         });
-        if (!$prizeTier) {
+
+        if (!$prizeTier) 
+        {
             return 0;
         }
+
         $sameRankCount = JoinCrickContest::where([
             'match_id' => $match,
             'contest_id' => $contest,
             'ranks' => $rank
         ])->count();
-        if ($sameRankCount > 1) {
+
+        if ($sameRankCount > 1) 
+        {
             $prizePool = collect($prizeBreakups)
                 ->where('rank_from', '<=', $rank)
                 ->where('rank_upto', '>=', $rank)
@@ -107,5 +138,35 @@ class PrizeDistribute implements ShouldQueue
             return $prizePool / $sameRankCount;
         }
         return $prizeTier['prize_amount'];
+    }
+
+    protected function flexiablePrizeForRank($rank, $prizeBreakups, $match, $contest, $totaljoined)
+    {  
+        $prizeTier = collect($prizeBreakups)->first(function ($prize) use ($rank) {
+            return $rank >= $prize['rank_from'] && $rank <= $prize['rank_upto'];
+        });
+
+        if (!$prizeTier) 
+        {
+            return 0;
+        }
+
+        $sameRankCount = JoinCrickContest::where([
+            'match_id' => $match,
+            'contest_id' => $contest,
+            'ranks' => $rank
+        ])->count();
+
+        if ($sameRankCount > 1) 
+        {
+            $prizePool = collect($prizeBreakups)
+                ->where('rank_from', '<=', $rank)
+                ->where('rank_upto', '>=', $rank)
+                ->sum('prize_amount');
+
+            return $prizePool / $sameRankCount;
+        }
+        // return $prizeTier['prize_amount'];
+        return ($prizeTier['prize_amount'] / 100) * $totaljoined;
     }
 }

@@ -72,11 +72,13 @@ class SetPointsRank implements ShouldQueue
             }
 
             Log::info([
+                'status' => 'success',
                 'Job' => 'SetPointsRank',
                 'Message' => 'Data fatched successfully',
             ]);
         } catch (\Throwable $th) {
             Log::info([
+                'status' => 'error',
                 'Job' => 'SetPointsRank',
                 'Message' => 'Failed to fatch data',
                 'data' => $th->getMessage()

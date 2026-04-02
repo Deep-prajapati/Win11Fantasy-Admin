@@ -61,7 +61,10 @@ class GetTeams implements ShouldQueue
 
                     if (isset($teamDetails['data']['error'])) 
                     {
-                        print_r($teamDetails['data']);
+                        Log::error([
+                            'status' => 'error',
+                            'error' => $teamDetails['data']
+                        ]);
                         break; // Skip if no squad data
                     }
 
@@ -104,11 +107,13 @@ class GetTeams implements ShouldQueue
             }
             
             Log::info([
+                'status' => 'success',
                 'Job' => 'GetTeams',
                 'Message' => 'Squad data fetched successfully'
             ]);
         } catch (\Throwable $th) {
             Log::info([
+                'status' => 'error',
                 'Job' => 'GetTeams',
                 'Message' => 'Failed to fatch data',
                 'data' => $th->getMessage()

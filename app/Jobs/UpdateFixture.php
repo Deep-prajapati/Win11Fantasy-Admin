@@ -35,21 +35,17 @@ class UpdateFixture implements ShouldQueue
     {
         try {
             $matches = Fixture::select('localteam_id', 'fixture_id', 'visitorteam_id', 'season_id')
-                ->addSelect('is_live', 'is_cancelled', 'is_completed')
-                // ->where(function ($query) {
-                //     $query->where('is_completed', false)
-                //         ->orWhere('is_cancelled', false);
-                // })
-                ->where('is_completed', false)
-                ->where('is_cancelled', false)
+            ->addSelect('is_live', 'is_cancelled', 'is_completed')
+            ->where('is_completed', false)
+            ->where('is_cancelled', false)
+            ->whereDate('starting_at', '>=', Carbon::yesterday())
+            ->whereDate('starting_at', '<=', Carbon::tomorrow())->get();
 
-                ->whereDate('starting_at', '>=', Carbon::yesterday())
-                ->whereDate('starting_at', '<=', Carbon::tomorrow())
-                ->get();
-            foreach ($matches as $match) {
-
+            foreach ($matches as $match) 
+            {
                 $response = $this->apiservice->getFixtureUpdates($match->fixture_id);
-                if ($response['success']) {
+                if ($response['success']) 
+                {
                     $data = $response['data'];
                     $isLive = function ($match, $data) {
                         return $match->is_completed
@@ -156,15 +152,23 @@ class UpdateFixture implements ShouldQueue
                         'is_cancelled' =>  $data['status'] == 'Aban.',
                         // 'is_completed' =>  $data['status'] == 'Finished',
                     ]);
+
+                    Log::info([
+                        'status' => 'success',
+                        'Job' => 'UpdateFixture',
+                        'Message' => 'Update fixture Successfully',
+                    ]);
+                }else{
+                    Log::error([
+                        'status' => 'error',
+                        'Job' => 'UpdateFixture',
+                        'Message' => 'Failed to fatch data for fixture_id: ' . $match->fixture_id,
+                    ]);
                 }
             }
-
-            Log::info([
-                'Job' => 'UpdateFixture',
-                'Message' => 'Update fixture Successfully',
-            ]);
         } catch (\Throwable $th) {
             Log::error([
+                'status' => 'error',
                 'Job' => 'UpdateFixture',
                 'Message' => 'Failed to fatch data',
                 'data' => $th->getMessage()

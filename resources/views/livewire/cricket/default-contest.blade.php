@@ -15,6 +15,7 @@
                             <th>Total Spots</th>
                             <th>Max Bots</th>
                             <th>MAX Team Entry</th>
+                            <th>Flexiable</th>
                             <th>Free</th>
                             <th>Allowed Cancellation</th>
                             <th>Status</th>
@@ -38,11 +39,28 @@
                                 <td>{{ $contest->contestType->contest_type ?? '' }}</td>
                                 <td>&#8377; {{ $contest->entry_fees }}</td>
                                 <td>&#8377; {{ $contest->usable_bonus }}</td>
-                                <td>&#8377; {{ $contest->total_winning_prize }}</td>
+                                <td>
+                                    @if($contest->is_felexible)
+                                        {{ $contest->total_winning_prize }} %
+                                    @else
+                                        &#8377; {{ $contest->total_winning_prize }}
+                                    @endif
+                                </td>
                                 <td>{{ $contest->total_spots }}</td>
                                 <td>{{ $contest->bot_user }}</td>
-                                <td>{{ $contest->contestType->max_entries ?? '' }} <span class="small text-info">*Per
-                                        User</span></td>
+                                <td>
+                                    {{ $contest->contestType->max_entries ?? '' }} 
+                                    <span class="small text-info">
+                                        *Per User
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    @if ($contest->is_felexible)
+                                        <span class="badge bg-label-success">Yes</span>
+                                    @else
+                                        <span class="badge bg-label-danger">NO</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     @if ($contest->is_free)
                                     <span class="badge bg-label-success">Yes</span>

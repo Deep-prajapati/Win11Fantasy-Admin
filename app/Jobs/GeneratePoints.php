@@ -57,11 +57,13 @@ class GeneratePoints implements ShouldQueue
             }
 
             Log::info([
+                'status' => 'success',
                 'Job' => 'GeneratePoints',
                 'Message' => 'Points generated successfully',
             ]);
         } catch (\Throwable $th) {
             Log::info([
+                'status' => 'error',
                 'Job' => 'GeneratePoints',
                 'Message' => 'Failed to fatch data',
                 'data' => $th->getMessage()

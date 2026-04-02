@@ -2,6 +2,8 @@
 
 namespace App\Logging;
 
+use Monolog\Formatter\LineFormatter;
+
 class CustomizeFormatter
 {
     /**
@@ -15,7 +17,12 @@ class CustomizeFormatter
     public function __invoke($logger)
     {
         foreach ($logger->getHandlers() as $handler) {
-            $handler->setFilePermission(0777); // 👈 force permission
+            $handler->setFormatter(new LineFormatter(
+                null,
+                null,
+                true,
+                true
+            ));
         }
     }
 }

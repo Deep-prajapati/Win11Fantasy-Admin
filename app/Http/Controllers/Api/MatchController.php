@@ -165,7 +165,7 @@ class MatchController extends Controller
             ]);
         }
         $contests = Contest::where('match_id', $fixture_id)->active()
-            ->select('id', 'mrp', 'contest_type', 'total_winning_prize', 'entry_fees', 'total_spots', 'filled_spot', 'default_contest_id', 'contest_type', 'first_prize', 'is_free', 'usable_bonus')
+            ->select('id', 'mrp', 'contest_type', 'total_winning_prize', 'entry_fees', 'total_spots', 'filled_spot', 'default_contest_id', 'contest_type', 'first_prize', 'is_free', 'usable_bonus', 'is_felexible')
             ->with(['contestType:id,contest_type,max_entries,cancellable as is_temp', 'prizeBreakups'])
             ->orderby('total_winning_prize','desc')
             ->get();
@@ -381,45 +381,114 @@ class MatchController extends Controller
     public function addJoinContest(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
-        if (!$fixture) {
+
+        if (!$fixture) 
+        {
             return Helper::EmptyReturn('Invalid details');
         }
+
         $rules = [
             'team_id' => ['required', Rule::exists('user_teams', 'id')],
             'contest_id' => ['required', Rule::exists('contests', 'id')->where('is_active', true)],
         ];
 
         $validator = Validator::make($request->all(), $rules);
-        if ($validator->fails()) {
+
+        if ($validator->fails()) 
+        {
             return Helper::EmptyReturn($validator->errors()->first());
         }
+
         $contest = Contest::where('id', $request->contest_id)->active()->with('defaultContest', 'contestType', 'prizeBreakups')->first();
-        if ($contest->is_cancelled) {
+
+        if ($contest->is_cancelled) 
+        {
             return Helper::EmptyReturn('Contest cancelled.');
         }
-        if ($contest->filled_spot == $contest->total_spots) {
+
+        if ($contest->filled_spot == $contest->total_spots) 
+        {
             return Helper::EmptyReturn('Contest already filled.');
         }
+
         $user = auth()->user();
-        if ($contest->contestType->max_entries == joinedCricTeamCount($user->id, $fixture_id, $request->contest_id)) {
+
+        if ($contest->contestType->max_entries == joinedCricTeamCount($user->id, $fixture_id, $request->contest_id)) 
+        {
             return Helper::EmptyReturn('Already used max allowed team.');
         }
-        if (alreayJoinedContestWithTeam($user->id, $request->team_id, $fixture_id, $request->contest_id)) {
+
+        if (alreayJoinedContestWithTeam($user->id, $request->team_id, $fixture_id, $request->contest_id)) 
+        {
             return Helper::EmptyReturn('Already joined this contest using this team.');
         }
-        if (!$contest->defaultContest->is_free) {
+
+        $deductBonus = 0;
+
+        if (!$contest->defaultContest->is_free) 
+        {
             $user->load('account');
-            if ($contest->entry_fees > ($user->account->balance + $user->account->winning)) {
-                return Helper::EmptyReturn('Insufficient balance. Please recharge first.');
+
+            if($contest->usable_bonus > 0 && $user->account->bonus > 0)
+            {
+                if($user->account->bonus >= $contest->usable_bonus)
+                {
+                    if (($contest->entry_fees - $contest->usable_bonus) > ($user->account->balance + $user->account->winning)) 
+                    {
+                        return Helper::EmptyReturn('Insufficient balance. Please recharge first.');
+                    }
+
+                    if ($user->account->balance < ($contest->entry_fees - $contest->usable_bonus)) 
+                    {
+                        $amountFromWinnings = ($contest->entry_fees - $contest->usable_bonus) - $user->account->balance;
+                        $user->account->winning -= $amountFromWinnings;
+                        $user->account->balance = 0;
+                        $user->account->bonus -= $contest->usable_bonus;
+                    } else {
+                        $user->account->balance -= $contest->entry_fees;
+                        $user->account->bonus -= $contest->usable_bonus;
+                    }
+
+                    $deductBonus = $contest->usable_bonus;
+                }else{
+                    if (($contest->entry_fees - $user->account->bonus) > ($user->account->balance + $user->account->winning)) 
+                    {
+                        return Helper::EmptyReturn('Insufficient balance. Please recharge first.');
+                    }
+
+                    if ($user->account->balance < ($contest->entry_fees - $user->account->bonus)) 
+                    {
+                        $amountFromWinnings = ($contest->entry_fees - $user->account->bonus) - $user->account->balance;
+                        $user->account->winning -= $amountFromWinnings;
+                        $user->account->balance = 0;
+                        $user->account->bonus = 0;
+                    } else {
+                        $user->account->balance -= $contest->entry_fees;
+                        $user->account->bonus = 0;
+                    }
+
+                    $deductBonus = $user->account->bonus;
+                }
             }
-            if ($user->account->balance < $contest->entry_fees) {
-                $amountFromWinnings = $contest->entry_fees - $user->account->balance;
-                $user->account->winning -= $amountFromWinnings;
-                $user->account->balance = 0;
-            } else {
-                $user->account->balance -= $contest->entry_fees;
+            else
+            {
+                if ($contest->entry_fees > ($user->account->balance + $user->account->winning)) 
+                {
+                    return Helper::EmptyReturn('Insufficient balance. Please recharge first.');
+                }
+
+                if ($user->account->balance < $contest->entry_fees) 
+                {
+                    $amountFromWinnings = $contest->entry_fees - $user->account->balance;
+                    $user->account->winning -= $amountFromWinnings;
+                    $user->account->balance = 0;
+                } else {
+                    $user->account->balance -= $contest->entry_fees;
+                }
             }
+
             $user->account->save();
+
             Transection::create([
                 'user_id' => $user->id,
                 'type' => 2,
@@ -427,7 +496,7 @@ class MatchController extends Controller
                 'desc' => 'Contest Entry | ' . $fixture->localteam_code . ' - ' . $fixture->visitorteam_code,
             ]);
         }
-        $deductBonus = 0;
+
         $data =  JoinCrickContest::create([
             'match_id' => $fixture_id,
             'user_id' => $user->id,
@@ -436,8 +505,10 @@ class MatchController extends Controller
             'entryfee_bonus' => $deductBonus,
             'entryfee_deposit' => $contest->entry_fees,
         ]);
+
         $contest->filled_spot += 1;
         $contest->save();
+
         return Helper::SuccessReturn($data, 'Contest joined successfully.');
     }
 

@@ -78,6 +78,7 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
+            'permission' => 0777, // 👈 yaha set karo
             'tap' => [App\Logging\CustomizeFormatter::class],
         ],
 

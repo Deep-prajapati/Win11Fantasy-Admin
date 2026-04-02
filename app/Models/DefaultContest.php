@@ -27,6 +27,7 @@ class DefaultContest extends Model
         'bonus_contest',
         'usable_bonus',
         'is_cloneable',
+        'is_felexible',
     ];
     protected $hidden = [
         'bot_user'

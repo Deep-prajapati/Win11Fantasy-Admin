@@ -57,11 +57,13 @@ class BotJoinContest implements ShouldQueue
             }
 
             Log::info([
+                'status' => 'success',
                 'Job' => 'BotJoinContest',
                 'Message' => 'Bot Join Contest Successfully',
             ]);
         } catch (\Throwable $th) {
             Log::info([
+                'status' => 'error',
                 'Job' => 'BotJoinContest',
                 'Message' => 'Failed to fatch data',
                 'data' => $th->getMessage()

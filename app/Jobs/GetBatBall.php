@@ -41,7 +41,8 @@ class GetBatBall implements ShouldQueue
             $matches = Fixture::where('is_live', true)->orderby('starting_at', 'asc')->pluck('fixture_id');
             foreach ($matches as $data) {
                 $details = $this->apiservice->getfixtureBettingBolling($data);
-                if ($details['success']) {
+                if ($details['success']) 
+                {
                     $keysToRemove = ["updated_at", "resource", "id"];
                     $filteredBattingData = array_map(function ($item) use ($keysToRemove) {
                         return array_diff_key($item, array_flip($keysToRemove));
@@ -88,15 +89,23 @@ class GetBatBall implements ShouldQueue
                             );
                         }
                     });
+                }else{
+                    Log::info([
+                        'status' => 'error',
+                        'Job' => 'GetBatBall',
+                        'Message' => 'Failed to fatch data from api for fixture_id: ' . $data,
+                    ]);
                 }
             }
 
             Log::info([
+                'status' => 'success',
                 'Job' => 'GetBatBall',
                 'Message' => 'bolling and betting records updated on ' . Carbon::now(),
             ]);
         } catch (\Throwable $th) {
             Log::info([
+                'status' => 'error',
                 'Job' => 'GetBatBall',
                 'Message' => 'Failed to fatch data',
                 'data' => $th->getMessage()

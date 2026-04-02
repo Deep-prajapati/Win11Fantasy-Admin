@@ -58,6 +58,7 @@ class CreateContest implements ShouldQueue
                             'is_free' => $contest->is_free,
                             'usable_bonus' => $contest->usable_bonus,
                             'is_cancelable' => $contest->is_cancelable ?? 0,
+                            'is_felexible' => $contest->is_felexible ?? 0,
                             'is_active' => $contest->deleted_at === null,
                         ];
                     }
@@ -76,17 +77,20 @@ class CreateContest implements ShouldQueue
                     'is_free',
                     'usable_bonus',
                     'is_cancelable',
+                    'is_felexible',
                     'is_active',
                     'updated_at'
                 ]);
             });
 
             Log::info([
+                'status' => 'success',
                 'Job' => 'CreateContest',
                 'Message' => 'Contest Created',
             ]);
         } catch (\Throwable $th) {
             Log::info([
+                'status' => 'error',
                 'Job' => 'CreateContest',
                 'Message' => 'Failed to fatch data',
                 'data' => $th->getMessage()

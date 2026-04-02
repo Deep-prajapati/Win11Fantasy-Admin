@@ -159,17 +159,20 @@ class GetFixture implements ShouldQueue
                 }
                 
                 Log::info([
+                    'status' => 'success',
                     'Job' => 'GetFixture',
                     'Message' => 'All data fatched',
                 ]);
             } else {
                 Log::info([
+                    'status' => 'error',
                     'Job' => 'GetFixture',
                     'Message' => 'Failed to fatch data',
                 ]);
             }
         } catch (\Throwable $th) {
             Log::info([
+                'status' => 'error',
                 'Job' => 'GetFixture',
                 'Message' => 'Failed to fatch data',
                 'data' => $th->getMessage()
