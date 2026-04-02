@@ -70,6 +70,8 @@ class GetTeams implements ShouldQueue
 
                     foreach ($teamDetails['data']['squad'] as $data) 
                     {
+                        $mappedPositionId = $this->mapPosition($data['position']['id']);
+
                         $playersData[] = [
                             'player_id' => $data['id'],
                             'team_id' => $teamId,
@@ -83,8 +85,8 @@ class GetTeams implements ShouldQueue
                             'gender' => $data['gender'],
                             'battingstyle' => $data['battingstyle'],
                             'bowlingstyle' => $data['bowlingstyle'],
-                            'position_id' => $data['position']['id'],
-                            'position_name' => $data['position']['name'],
+                            'position_id' => $mappedPositionId,
+                            'position_name' => $this->getPositionName($mappedPositionId),
                             'updated_at' => now(), // Ensure timestamps are updated
                             'credits' => getDefaultCredits($data['position']['id']),
                         ];
@@ -119,5 +121,33 @@ class GetTeams implements ShouldQueue
                 'data' => $th->getMessage()
             ]);
         }
+    }
+
+    function mapPosition($positionId)
+    {
+        $map = [
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 4,
+            5 => 1,
+            8 => 1,
+            11 => 2,
+            14 => 1,
+        ];
+
+        return $map[$positionId] ?? 1; // default Batsman
+    }
+
+    function getPositionName($id)
+    {
+        $names = [
+            1 => 'Batsman',
+            2 => 'Bowler',
+            3 => 'Wicketkeeper',
+            4 => 'Allrounder',
+        ];
+
+        return $names[$id] ?? 'Batsman';
     }
 }

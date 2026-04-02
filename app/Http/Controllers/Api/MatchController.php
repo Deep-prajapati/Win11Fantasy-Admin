@@ -17,12 +17,10 @@ use App\Models\PrizeBreakup;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\JoinCrickContest;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\Playerspoint;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Symfony\Component\HttpKernel\Event\RequestEvent;
 
 class MatchController extends Controller
 {
@@ -445,7 +443,7 @@ class MatchController extends Controller
                         $user->account->balance = 0;
                         $user->account->bonus -= $contest->usable_bonus;
                     } else {
-                        $user->account->balance -= $contest->entry_fees;
+                        $user->account->balance -= ($contest->entry_fees - $contest->usable_bonus);
                         $user->account->bonus -= $contest->usable_bonus;
                     }
 
@@ -463,7 +461,7 @@ class MatchController extends Controller
                         $user->account->balance = 0;
                         $user->account->bonus = 0;
                     } else {
-                        $user->account->balance -= $contest->entry_fees;
+                        $user->account->balance -= ($contest->entry_fees - $user->account->bonus);
                         $user->account->bonus = 0;
                     }
 

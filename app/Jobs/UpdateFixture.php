@@ -4,7 +4,10 @@ namespace App\Jobs;
 
 use App\Models\CricRuns;
 use App\Models\Fixture;
+use App\Models\JoinCrickContest;
 use App\Models\Playing11;
+use App\Models\User;
+use App\Models\UserWallet;
 use App\Services\SportsMonkService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -152,6 +155,50 @@ class UpdateFixture implements ShouldQueue
                         'is_cancelled' =>  $data['status'] == 'Aban.',
                         // 'is_completed' =>  $data['status'] == 'Finished',
                     ]);
+
+                    if($data['status'] == 'Aban.')
+                    {
+                        try {
+                            $users = JoinCrickContest::whereHas('contest', function ($query) use ($match) 
+                            {
+                                $query->where('match_id', $match->fixture_id);
+                            })->with('contest')->get()->pluck('user_id')->unique();
+
+                            foreach ($users as $user_id) 
+                            {
+                                $user = User::find($user_id);
+
+                                $contests = JoinCrickContest::whereHas('contest', function ($query) use ($match) 
+                                {
+                                    $query->where('match_id', $match->fixture_id);
+                                })->where('user_id', $user_id)->with('contest')->get();
+
+                                foreach ($contests as $joinContest) 
+                                {
+                                    $contest = $joinContest->contest;
+                                    
+                                    $wallet = UserWallet::where('user_id', $user_id)->first();
+                                    $wallet->bonus += $contest->entry_fees;
+                                    $wallet->save();
+                                }
+                            }
+
+                            Log::info([
+                                'status' => 'success',
+                                'Job' => 'UpdateFixture',
+                                'fixture_id' => $match->fixture_id,
+                                'Message' => 'Refunded entry fees for cancelled match successfully',
+                            ]);
+                        } catch (\Throwable $th) {
+                            Log::error([
+                                'status' => 'error',
+                                'Job' => 'UpdateFixture',
+                                'fixture_id' => $match->fixture_id,
+                                'Message' => 'Failed to refund entry fees for cancelled match',
+                                'data' => $th->getMessage()
+                            ]);
+                        }
+                    }
 
                     Log::info([
                         'status' => 'success',
