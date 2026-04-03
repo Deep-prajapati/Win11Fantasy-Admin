@@ -104,17 +104,38 @@ class Fixture extends Model
         }
         return Playing11::where('fixture_id', $this->fixture_id)->count() > 0; // 22;
     }
+
     public function getPlaying11Attribute()
     {
         return Playing11::where('fixture_id', $this->fixture_id)->pluck('player_id');
     }
+
     public function getMegaAttribute()
     {
-        return Contest::where('match_id', $this->fixture_id)
-            ->orderBy('total_winning_prize', 'desc')
-            ->first()
-            ?->total_winning_prize ?? 1;
+        $contests = Contest::where('match_id', $this->fixture_id)->get();
+
+        if ($contests->isEmpty()) {
+            return 1;
+        }
+
+        $maxPrize = 0;
+
+        foreach ($contests as $contest) {
+
+            if ($contest->is_felexible == 1) {
+                $amount = (((int)$contest->entry_fees * (int)$contest->total_spots) * (int)$contest->total_winning_prize) / 100;
+            } else {
+                $amount = (int)$contest->total_winning_prize;
+            }
+
+            if ($amount > $maxPrize) {
+                $maxPrize = $amount;
+            }
+        }
+
+        return $maxPrize;
     }
+
     public function getScoresAttribute()
     {
         if (($this->is_live  == false && $this->is_completed == false && $this->is_cancelled  == false)) {
