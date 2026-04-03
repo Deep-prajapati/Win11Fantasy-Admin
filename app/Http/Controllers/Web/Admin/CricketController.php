@@ -343,14 +343,17 @@ class CricketController extends Controller
         $dis_commission = 0;
         $admin_commission = 0;
 
-        foreach ($contest->prizeBreakup as $prize) 
+        if($contest->is_felexible == 1)
         {
-            $count = ($prize->rank_upto - $prize->rank_from + 1);
-            $dis_commission += ($prize->prize_amount * $count);
-        }
+            foreach ($contest->prizeBreakup as $prize) 
+            {
+                $count = ($prize->rank_upto - $prize->rank_from + 1);
+                $dis_commission += ($prize->prize_amount * $count);
+            }
 
-        $admin_commission = 100 - $dis_commission;
-        $dis_amount = (((int)$contest->total_spots * (int)$contest->entry_fees) * $dis_commission) / 100;
+            $admin_commission = 100 - $dis_commission;
+            $dis_amount = (((int)$contest->total_spots * (int)$contest->entry_fees) * $dis_commission) / 100;
+        }
         
         return view('cricket.contests.edit', compact('title', 'contest', 'contest_types', 'dis_amount', 'dis_commission', 'admin_commission'));
     }
@@ -405,7 +408,7 @@ class CricketController extends Controller
                 'extra_cash' => 0,
                 'bonus_contest' => (isset($request->is_bonus_contest)) ? true : false,
                 'is_cloneable' => (isset($request->is_cloneable)) ? true : false,
-                'is_felexible' => (isset($request->is_felexible)) ? true : false,
+                'is_felexible' => (isset($request->is_felexible)) ? 1 : 0,
                 'usable_bonus' => $request->usable_bonus,
                 'bot_user' => $request->total_bots,
             ]);

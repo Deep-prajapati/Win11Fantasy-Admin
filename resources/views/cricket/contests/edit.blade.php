@@ -136,7 +136,7 @@
                         <label for="admin_commission" class="form-label">
                             Admin Commission (%)
                         </label>
-                        <input type="number" min="1" class="form-control @error('admin_commission') is-invalid @enderror"
+                        <input type="number" min="0" class="form-control @error('admin_commission') is-invalid @enderror"
                             id="admin_commission" name="admin_commission" value="{{ old('admin_commission' , $admin_commission) }}" placeholder="Admin Commission">
                         @error('admin_commission')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -147,7 +147,7 @@
                         <label for="dis_commission" class="form-label">
                             Distributed Commission (%)
                         </label>
-                        <input type="number" min="1" class="form-control @error('dis_commission') is-invalid @enderror"
+                        <input type="number" min="0" class="form-control @error('dis_commission') is-invalid @enderror"
                             id="dis_commission" name="dis_commission" value="{{ old('dis_commission' , $dis_commission) }}" placeholder="Distributed Commission">
                         @error('dis_commission')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -158,7 +158,7 @@
                         <label for="dis_amount" class="form-label">
                             Distributed Amount (₹)
                         </label>
-                        <input type="number" min="1" class="form-control @error('dis_amount') is-invalid @enderror"
+                        <input type="number" min="0" class="form-control @error('dis_amount') is-invalid @enderror"
                                 id="dis_amount" name="dis_amount" value="{{ old('dis_amount' , $dis_amount) }}" placeholder="Distributed Amount">
                         @error('dis_amount')
                             <div class="invalid-feedback">{{ $message }}</div>
