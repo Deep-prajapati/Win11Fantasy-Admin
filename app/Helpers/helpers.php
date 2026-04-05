@@ -137,16 +137,19 @@ function countBotUserJoinedInContestForMatch($match_id, $contest_id, $user_id)
 
 function botsAllowedInContest($match_id, $contest, $contest_type)
 {
-    if (isset($contest->defaultContest)) {
-
+    if (isset($contest->defaultContest)) 
+    {
         $botCount = JoinCrickContest::where([
             'match_id' => $match_id,
             'contest_id' => $contest->id
         ])->whereHas('user', function ($query) {
             $query->where('role', 3);
         })->count();
+
         $botUserCount = User::where('role', 3)->count();
+
         $maxBotsTeam = $contest_type->max_entries * $botUserCount;
+        
         return ($maxBotsTeam >= $contest->defaultContest->bot_user) ? ($botCount < $contest->defaultContest->bot_user) : (($botCount < $maxBotsTeam) ? true : false);
     } else {
         return false;

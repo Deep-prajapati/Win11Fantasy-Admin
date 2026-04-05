@@ -3,17 +3,10 @@
 use Illuminate\Support\Facades\Schedule;
 use App\Jobs\{
     BotJoinContest,
-    CancleContest,
     GetFixture,
     CreateContest,
-    FootballCancleContest,
-    FootballCreateContest,
-    FootballMatches,
-    FootballPrizeDistribute,
-    FootBallSetPointsRank,
     GeneratePoints,
     GetBatBall,
-    GetLineUp,
     GetTeams,
     PrizeDistribute,
     RankGenerate,

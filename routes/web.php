@@ -35,8 +35,7 @@ Route::group(['as' => 'admin.'], function ()
             Route::get('/', [UsersController::class, 'index'])->name('list');
             Route::get('{user_id}/view', [UsersController::class, 'view'])->name('view');
             Route::match(['get','post'],'{user_id}/wallet', [UsersController::class, 'wallet'])->name('wallet');
-            // Route::get('{user_id}/block', [UsersController::class, 'block'])->name('block');
-            // Route::get('{user_id}/unblock', [UsersController::class, 'unblock'])->name('unblock');
+            Route::post('{user_id}/update', [UsersController::class, 'Update'])->name('update');
 
             Route::group(['prefix' => 'bots', 'as' => 'bots.'], function () 
             {

@@ -78,6 +78,7 @@
     </div> --}}
     @livewire('users')
 @endsection
+
 @section('scripts')
     @livewireScripts
 @endsection

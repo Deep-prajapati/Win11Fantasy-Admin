@@ -53,7 +53,9 @@
                                 </td>
                                 <td>{{ $user->name ?? 'NA' }}</td>
                                 <td>{{ $user->email ?? 'NA' }}</td>
-                                <td>{{ $user->country_code ?? 'NA' . ' ' . $user->mobile_number ?? 'NA' }}</td>
+                                <td>
+                                    {{ ($user->country_code ?? 'NA') . ' ' . ($user->mobile_number ?? 'NA') }}
+                                </td>
                                 <td>
                                     <div><strong>Balance:</strong> {{ number_format($user->account->balance ?? 0, 2) }}</div>
                                     <div><strong>Bonus:</strong> {{ number_format($user->account->bonus ?? 0, 2) }}</div>

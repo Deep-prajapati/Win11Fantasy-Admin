@@ -205,13 +205,22 @@ class MatchController extends Controller
     public function createTeam(Request $request, $fixture_id)
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
-        if (!$fixture) {
+
+        if (!$fixture) 
+        {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid request',
             ]);
         }
+
+        if ($fixture->status == 'live' || $fixture->is_live) 
+        {
+            return Helper::FalseReturn(null, 'You cannot create team now. Match already live.');
+        }
+
         $team_id = [$fixture->localteam_id, $fixture->visitorteam_id];
+
         $rules = [
             'players' => ['required', 'array', 'size:11'],
             'players.*' => [Rule::exists('players', 'player_id')->where(function ($query) use ($team_id) {
@@ -220,24 +229,33 @@ class MatchController extends Controller
             'c_player' => ['required'],
             'vc_player' => ['required'],
         ];
+
         $validator = Validator::make($request->all(), $rules, [
             'players.size' => 'Please select 11 players for complition of team.',
             'players.*.exists' => 'Invalid team player selected.',
             'c_player.required' => 'Caption selection required in team',
             'vc_player.required' => 'Voice caption selection required in team',
         ]);
+
         if ($validator->fails()) {
             return Helper::FalseReturn(null, $validator->errors()->first());
         }
+
         $user = auth()->user();
-        if ($request->c_player == $request->vc_player) {
+
+        if ($request->c_player == $request->vc_player) 
+        {
             return Helper::FalseReturn(null, 'Caption and voice caption player cannot be one player.');
         }
+
         $teama = Playing11::where(['fixture_id' => $fixture_id, 'team_id' => $fixture->localteam_id])->pluck('player_id')->toArray();
         $teamb = Playing11::where(['fixture_id' => $fixture_id, 'team_id' => $fixture->visitorteam_id])->pluck('player_id')->toArray();
-        if (count(array_intersect($request->players, $teama)) > 7 || count(array_intersect($request->players, $teamb)) > 7) {
+
+        if (count(array_intersect($request->players, $teama)) > 7 || count(array_intersect($request->players, $teamb)) > 7) 
+        {
             return Helper::FalseReturn(null, 'Max 7 player allowed from single team.');
         }
+
         UserTeam::create([
             'match_id' => $fixture_id,
             'user_id' => $user->id,
@@ -247,21 +265,30 @@ class MatchController extends Controller
             'voic_caption_id' => $request->vc_player,
             'teams' => $request->players,
         ]);
+
         return Helper::SuccessReturn('', 'Team created successfully.');
     }
 
     public function updateTeam(Request $request, $fixture_id)
     {
-
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
+        
         if (!$fixture) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid request',
             ]);
         }
+
+        if ($fixture->status == 'live' || $fixture->is_live) 
+        {
+            return Helper::FalseReturn(null, 'You cannot create team now. Match already live.');
+        }
+
         $user = auth()->user();
+
         $team_id = [$fixture->localteam_id, $fixture->visitorteam_id];
+
         $rules = [
             'team_id' => ['required', Rule::exists('user_teams', 'id')],
             'players' => ['required', 'array', 'size:11'],
@@ -271,24 +298,34 @@ class MatchController extends Controller
             'c_player' => ['required'],
             'vc_player' => ['required'],
         ];
+
         $validator = Validator::make($request->all(), $rules, [
             'players.size' => 'Please select 11 players for complition of team.',
             'players.*.exists' => 'Invalid team player selected.',
             'c_player.required' => 'Caption selection required in team',
             'vc_player.required' => 'Voice caption selection required in team',
         ]);
-        if ($validator->fails()) {
+
+        if ($validator->fails()) 
+        {
             return Helper::FalseReturn(null, $validator->errors()->first());
         }
-        if ($request->c_player == $request->vc_player) {
+
+        if ($request->c_player == $request->vc_player) 
+        {
             return Helper::FalseReturn(null, 'Caption and voice caption player cannot be one player.');
         }
+
         $teama = Playing11::where(['fixture_id' => $fixture_id, 'team_id' => $fixture->localteam_id])->pluck('player_id')->toArray();
         $teamb = Playing11::where(['fixture_id' => $fixture_id, 'team_id' => $fixture->visitorteam_id])->pluck('player_id')->toArray();
-        if (count(array_intersect($request->players, $teama)) > 7 || count(array_intersect($request->players, $teamb)) > 7) {
+
+        if (count(array_intersect($request->players, $teama)) > 7 || count(array_intersect($request->players, $teamb)) > 7) 
+        {
             return Helper::FalseReturn(null, 'Max 7 player allowed from single team.');
         }
+
         $team = UserTeam::where('id', $request->team_id)->first();
+
         $team->update([
             'match_id' => $fixture_id,
             'user_id' => $user->id,
@@ -299,6 +336,7 @@ class MatchController extends Controller
             'edit_count' => $team->edit_count + 1,
             'teams' => $request->players,
         ]);
+
         return Helper::SuccessReturn('', 'Team updated successfully.');
     }
 

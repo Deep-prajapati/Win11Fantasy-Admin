@@ -4,7 +4,6 @@
             <span class="app-brand-logo demo">
                 <img src="{{asset('assets/Logo.svg')}}" alt="logo.." srcset="">
             </span>
-            <!-- <span class="app-brand-text demo menu-text fw-bolder ms-2">{{ env('APP_NAME') }}</span> -->
         </a>
 
         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
@@ -15,6 +14,8 @@
     <div class="menu-inner-shadow"></div>
 
     <ul class="menu-inner py-1">
+        <li class="menu-header small text-uppercase"><span class="menu-header-text">Menu</span></li>
+
         <!-- Dashboard -->
         <li class="menu-item {{menuActive('admin.dashboard')}}">
             <a href="{{route('admin.dashboard')}}" class="menu-link">
@@ -23,10 +24,10 @@
             </a>
         </li>
 
-        <!-- Layouts -->
+        <!-- Users -->
         <li class="menu-item {{menuActive('admin.users.*',5)}}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-layout"></i>
+                <i class="menu-icon tf-icons bx bx-group"></i>
                 <div data-i18n="Layouts">User Management</div>
             </a>
 
@@ -51,19 +52,19 @@
 
         <li class="menu-item {{menuActive('admin.recharge.*')}}">
             <a href="{{route('admin.recharge.list')}}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                <i class="menu-icon tf-icons bx bx-wallet"></i>
                 <div data-i18n="Analytics">Recharges</div>
             </a>
         </li>
         <li class="menu-item {{menuActive('admin.withdawal.*')}}">
             <a href="{{route('admin.withdawal.list')}}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-home-circle"></i>
-                <div data-i18n="Analytics">Withdawals</div>
+                <i class="menu-icon tf-icons bx bx-log-out-circle"></i>
+                <div data-i18n="Analytics">Withdrawals</div>
             </a>
         </li>
         <li class="menu-item {{menuActive('admin.tnxlist')}}">
             <a href="{{route('admin.tnxlist')}}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                <i class="menu-icon tf-icons bx bx-list-ul"></i>
                 <div data-i18n="Analytics">Tnx List</div>
             </a>
         </li>
@@ -71,19 +72,19 @@
 
         <li class="menu-item {{menuActive('admin.cricket.leagues')}}">
             <a href="{{route('admin.cricket.leagues')}}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                <i class="menu-icon tf-icons bx bx-trophy"></i>
                 <div data-i18n="Analytics">Leagues </div>
             </a>
         </li>
         <li class="menu-item {{menuActive('admin.cricket.matches')}}">
             <a href="{{route('admin.cricket.matches')}}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                <i class="menu-icon tf-icons bx bx-calendar-event"></i>
                 <div data-i18n="Analytics">Matches List</div>
             </a>
         </li>
         <li class="menu-item {{menuActive('admin.cricket.contest.type.*',5)}}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-layout"></i>
+                <i class="menu-icon tf-icons bx bx-category"></i>
                 <div data-i18n="Layouts">Contests Types</div>
             </a>
 
@@ -102,7 +103,7 @@
         </li>
         <li class="menu-item {{menuActive('admin.cricket.default.contest.*',5)}}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-layout"></i>
+                <i class="menu-icon tf-icons bx bx-flag"></i>
                 <div data-i18n="Layouts">Default Contests</div>
             </a>
             <ul class="menu-sub">
@@ -118,7 +119,8 @@
                 </li>
             </ul>
         </li>
-        <li class="menu-header small text-uppercase"><span class="menu-header-text">Football</span></li>
+
+        <!-- <li class="menu-header small text-uppercase"><span class="menu-header-text">Football</span></li>
         <li class="menu-item {{menuActive('admin.football.leagues')}}">
             <a href="{{route('admin.football.leagues')}}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-home-circle"></i>
@@ -167,11 +169,13 @@
                     </a>
                 </li>
             </ul>
-        </li>
+        </li> -->
+
         <li class="menu-header small text-uppercase"><span class="menu-header-text">Others</span></li>
+
         <li class="menu-item {{menuActive('admin.settings')}}">
             <a href="{{route('admin.settings')}}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                <i class="menu-icon tf-icons bx bx-slider-alt"></i>
                 <div data-i18n="Analytics">Settings</div>
             </a>
         </li>

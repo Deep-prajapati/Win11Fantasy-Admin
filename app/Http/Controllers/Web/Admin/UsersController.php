@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Web\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Fixture;
-use App\Models\JoinCrickContest;
 use App\Models\Transection;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -38,6 +36,7 @@ class UsersController extends Controller
         flash()->success('User blocked successfully.');
         return redirect()->route('admin.users.list');
     }
+
     public function unblock(Request $request, $user_id)
     {
         $user = User::where(['id' => $user_id, 'role' => 2, 'is_banned' => true])->first();
@@ -50,36 +49,49 @@ class UsersController extends Controller
         flash()->success('User unblocked successfully.');
         return redirect()->route('admin.users.list');
     }
+    
     public function view($user_id)
     {
         $user = User::where(['id' => $user_id, 'role' => 2])->first();
+
         if (!$user) {
             flash()->error('Invalid User details');
             return redirect()->route('admin.users.list');
         }
+
         $user->load('account');
         // $matchesIds = JoinCrickContest::where(['user_id'=>$user_id])->groupby('match_id')->pluck('match_id');
         //    return $matches = Fixture::whereIn('fixture_id',$matchesIds)->orderby('starting_at','desc')->get();
         $title = "User";
+
         return view('users.view', compact('title', 'user'));
     }
+
     public function wallet(Request $request, $user_id)
     {
         $user = User::where(['id' => $user_id, 'role' => 2])->first();
-        if (!$user) {
+
+        if (!$user) 
+        {
             flash()->error('Invalid User details');
             return redirect()->route('admin.users.list');
         }
+
         $user->load('account');
-        if ($request->isMethod('POST')) {
+
+        if ($request->isMethod('POST')) 
+        {
             $request->validate([
                 "balance" => ['required', 'numeric', 'min:0', 'regex:/^\d+(\.\d+)?$/'],
                 "winning" => ['required', 'numeric', 'min:0', 'regex:/^\d+(\.\d+)?$/'],
                 "bonus" => ['required', 'numeric', 'min:0', 'regex:/^\d+(\.\d+)?$/']
             ]);
-            if ($user->account->winning != $request->winning) {
+
+            if ($user->account->winning != $request->winning) 
+            {
                 $diff = $request->winning - $user->account->winning;
                 $user->account->winning = $request->winning;
+
                 Transection::create([
                     'user_id' => $user->id,
                     'type' => ($diff > 0) ? 1 : 2,
@@ -87,9 +99,12 @@ class UsersController extends Controller
                     'desc' => 'Winnings | App',
                 ]);
             }
-            if ($user->account->balance != $request->balance) {
+
+            if ($user->account->balance != $request->balance) 
+            {
                 $diff = $request->balance - $user->account->balance;
                 $user->account->balance = $request->balance;
+
                 Transection::create([
                     'user_id' => $user->id,
                     'type' => ($diff > 0) ? 1 : 2,
@@ -97,9 +112,12 @@ class UsersController extends Controller
                     'desc' =>  'Balance | App',
                 ]);
             }
-            if ($user->account->bonus != $request->bonus) {
+
+            if ($user->account->bonus != $request->bonus) 
+            {
                 $diff = $request->bonus - $user->account->bonus;
                 $user->account->bonus = $request->bonus;
+
                 Transection::create([
                     'user_id' => $user->id,
                     'type' => ($diff > 0) ? 1 : 2,
@@ -107,7 +125,9 @@ class UsersController extends Controller
                     'desc' => 'Bonus | App',
                 ]);
             }
+
             $user->account->update();
+
             flash()->success('Wallet details updated');
             return redirect()->route('admin.users.wallet', $user_id);
         } else {
@@ -115,6 +135,30 @@ class UsersController extends Controller
             return view('users.wallet', compact('title', 'user'));
         }
     }
+
+    public function Update(Request $request, $user_id)
+    {
+        $user = User::where(['id' => $user_id, 'role' => 2])->first();
+
+        if (!$user) 
+        {
+            flash()->error('Invalid User details');
+            return redirect()->route('admin.users.list');
+        }
+        
+        $request->validate([
+            "email" => ['nullable', 'string', 'max:100'],
+            "name" => ['required', 'string', 'max:100']
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->update();
+
+        flash()->success('User details updated');
+        return redirect()->route('admin.users.wallet', $user_id);
+    }
+
     public function botsUserStatus($user_id)
     {
         $user = User::where(['id' => $user_id, 'role' => 3])->first();
@@ -127,6 +171,7 @@ class UsersController extends Controller
         flash()->success('bot User status updated successfully.');
         return redirect()->route('admin.users.bots.list');
     }
+
     public function botsUseradd(Request $request)
     {
         if ($request->isMethod('POST')) {
