@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\UserChatController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\Web\Admin\AdminController;
 use App\Http\Controllers\Web\Admin\AuthController;
@@ -12,6 +11,12 @@ use App\Http\Controllers\Web\Admin\DashboardController;
 use App\Http\Controllers\Web\Admin\Football\MatchesController as FMController;
 use App\Http\Controllers\Web\Admin\Football\ContestController as FMContestController;
 use App\Http\Controllers\Web\Admin\WithdrawlController;
+use App\Models\Fixture;
+use App\Models\JoinCrickContest;
+use App\Models\Transection;
+use App\Models\User;
+use App\Models\UserWallet;
+use Illuminate\Support\Facades\Log;
 
 Route::get('send-lineup-notification',[CommonController::class,'testlinupMessage']);
 
@@ -123,4 +128,69 @@ Route::group(['as' => 'admin.'], function ()
             // Route::get('matches',[CricketController::class,'index'])->name('matches');
         });
     });
+});
+
+Route::get('refund/fdcgry/{id}', function($id){
+    
+    try {
+        $match = Fixture::where('fixture_id', $id)->first();
+
+        $users = JoinCrickContest::whereHas('contest', function ($query) use ($match) 
+        {
+            $query->where('match_id', $match->fixture_id);
+        })->with('contest')->get()->pluck('user_id')->unique();
+        
+        foreach ($users as $user_id) 
+        {
+            $user = User::find($user_id);
+
+            $contests = JoinCrickContest::whereHas('contest', function ($query) use ($match) 
+            {
+                $query->where('match_id', $match->fixture_id);
+            })->where('user_id', $user_id)->with('contest')->get();
+
+            foreach ($contests as $joinContest) 
+            {
+                $contest = $joinContest->contest;
+                
+                $wallet = UserWallet::where('user_id', $user_id)->first();
+
+                if(!$wallet) 
+                {
+                    Log::warning('No wallet found for user_id: ' . $user_id . '. Skipping refund for this user.');
+                    continue;
+                }
+
+                $wallet->bonus += $contest->entry_fees;
+                $wallet->save();
+
+                Transection::create([
+                    'user_id' => $user->id,
+                    'type' => 1,
+                    'amount' => $contest->entry_fees,
+                    'desc' => 'Refund | ' . $match->localteam_code . ' - ' . $match->visitorteam_code,
+                ]);
+            }
+        }
+
+        Log::info([
+            'status' => 'success',
+            'Job' => 'UpdateFixture',
+            'fixture_id' => $match->fixture_id,
+            'Message' => 'Refunded entry fees for cancelled match successfully',
+            'Total Users Refunded' => $users->count(),
+        ]);
+
+        return 'Refunded entry fees for cancelled match successfully';
+    } catch (\Throwable $th) {
+        Log::error([
+            'status' => 'error',
+            'Job' => 'UpdateFixture',
+            'fixture_id' => $match->fixture_id,
+            'Message' => 'Failed to refund entry fees for cancelled match',
+            'data' => $th->getMessage()
+        ]);
+
+        return 'Failed to refund entry fees for cancelled match - ' . $th->getMessage();
+    }
 });

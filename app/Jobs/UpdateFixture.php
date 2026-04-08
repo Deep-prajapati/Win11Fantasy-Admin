@@ -6,6 +6,7 @@ use App\Models\CricRuns;
 use App\Models\Fixture;
 use App\Models\JoinCrickContest;
 use App\Models\Playing11;
+use App\Models\Transection;
 use App\Models\User;
 use App\Models\UserWallet;
 use App\Services\SportsMonkService;
@@ -47,14 +48,18 @@ class UpdateFixture implements ShouldQueue
             foreach ($matches as $match) 
             {
                 $response = $this->apiservice->getFixtureUpdates($match->fixture_id);
+
                 if ($response['success']) 
                 {
                     $data = $response['data'];
-                    $isLive = function ($match, $data) {
+
+                    $isLive = function ($match, $data) 
+                    {
                         return $match->is_completed
                             ? $match->is_live
                             : ($data['live'] == true && Carbon::parse($data['starting_at'])->lte(Carbon::now()));
                     };
+
                     if (count($data['lineup']) > 0) {
                         foreach ($data['lineup'] as $index => $lineup) {
                             $team_id = $lineup['lineup']['team_id'];
@@ -90,6 +95,7 @@ class UpdateFixture implements ShouldQueue
                             ]);
                         }
                     }
+
                     if (count($data['runs']) > 0) {
                         $runsToUpsert = collect($data['runs'])->map(function ($runData) {
                             return [
@@ -110,6 +116,7 @@ class UpdateFixture implements ShouldQueue
                             ['inning', 'score', 'wickets', 'overs', 'pp1', 'pp2', 'pp3']
                         );
                     }
+                       
                     Fixture::updateOrCreate([
                         'fixture_id' => $data['id']
                     ], [
@@ -163,7 +170,7 @@ class UpdateFixture implements ShouldQueue
                             {
                                 $query->where('match_id', $match->fixture_id);
                             })->with('contest')->get()->pluck('user_id')->unique();
-
+                            
                             foreach ($users as $user_id) 
                             {
                                 $user = User::find($user_id);
@@ -178,8 +185,22 @@ class UpdateFixture implements ShouldQueue
                                     $contest = $joinContest->contest;
                                     
                                     $wallet = UserWallet::where('user_id', $user_id)->first();
+
+                                    if(!$wallet) 
+                                    {
+                                        Log::warning('No wallet found for user_id: ' . $user_id . '. Skipping refund for this user.');
+                                        continue;
+                                    }
+
                                     $wallet->bonus += $contest->entry_fees;
                                     $wallet->save();
+
+                                    Transection::create([
+                                        'user_id' => $user->id,
+                                        'type' => 1,
+                                        'amount' => $contest->entry_fees,
+                                        'desc' => 'Refund | ' . $match->localteam_code . ' - ' . $match->visitorteam_code,
+                                    ]);
                                 }
                             }
 
@@ -188,6 +209,7 @@ class UpdateFixture implements ShouldQueue
                                 'Job' => 'UpdateFixture',
                                 'fixture_id' => $match->fixture_id,
                                 'Message' => 'Refunded entry fees for cancelled match successfully',
+                                'Total Users Refunded' => $users->count(),
                             ]);
                         } catch (\Throwable $th) {
                             Log::error([

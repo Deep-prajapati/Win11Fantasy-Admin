@@ -62,6 +62,10 @@ class JoinCrickContest extends Model
         return $this->belongsTo(UserTeam::class,'created_team_id','id')->withCaptionsImg();
     }
 
+    public function contest(){
+        return $this->belongsTo(Contest::class,'contest_id','id');
+    }
+
     protected static function boot()
     {
         parent::boot();
