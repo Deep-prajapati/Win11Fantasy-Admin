@@ -280,9 +280,9 @@ class MatchController extends Controller
             ]);
         }
 
-        if ($fixture->status == 'live' || $fixture->is_live) 
+        if ($fixture->is_live == true || $fixture->is_cancelled == true || $fixture->is_completed == true) 
         {
-            return Helper::FalseReturn(null, 'You cannot create team now. Match already live.');
+            return Helper::FalseReturn(null, 'You cannot update team now.');
         }
 
         $user = auth()->user();
@@ -458,8 +458,10 @@ class MatchController extends Controller
         {
             return Helper::EmptyReturn('Already joined this contest using this team.');
         }
-
-        $deductBonus = 0;
+        
+        $winning = 0;
+        $balance = 0;
+        $winning = 0;
 
         if (!$contest->defaultContest->is_free) 
         {
@@ -477,15 +479,22 @@ class MatchController extends Controller
                     if ($user->account->balance < ($contest->entry_fees - $contest->usable_bonus)) 
                     {
                         $amountFromWinnings = ($contest->entry_fees - $contest->usable_bonus) - $user->account->balance;
+
                         $user->account->winning -= $amountFromWinnings;
+                        $winning = $amountFromWinnings;
+
+                        $balance = $user->account->balance;
                         $user->account->balance = 0;
+
                         $user->account->bonus -= $contest->usable_bonus;
+                        $bonus = $contest->usable_bonus;
                     } else {
                         $user->account->balance -= ($contest->entry_fees - $contest->usable_bonus);
-                        $user->account->bonus -= $contest->usable_bonus;
-                    }
+                        $balance = ($contest->entry_fees - $contest->usable_bonus);
 
-                    $deductBonus = $contest->usable_bonus;
+                        $user->account->bonus -= $contest->usable_bonus;
+                        $bonus = $contest->usable_bonus;
+                    }
                 }else{
                     if (($contest->entry_fees - $user->account->bonus) > ($user->account->balance + $user->account->winning)) 
                     {
@@ -495,15 +504,22 @@ class MatchController extends Controller
                     if ($user->account->balance < ($contest->entry_fees - $user->account->bonus)) 
                     {
                         $amountFromWinnings = ($contest->entry_fees - $user->account->bonus) - $user->account->balance;
+
                         $user->account->winning -= $amountFromWinnings;
+                        $winning = $amountFromWinnings;
+
+                        $balance = $user->account->balance;
                         $user->account->balance = 0;
+
+                        $bonus = $user->account->bonus;
                         $user->account->bonus = 0;
                     } else {
                         $user->account->balance -= ($contest->entry_fees - $user->account->bonus);
+                        $balance = ($contest->entry_fees - $user->account->bonus);
+
+                        $bonus = $user->account->bonus;
                         $user->account->bonus = 0;
                     }
-
-                    $deductBonus = $user->account->bonus;
                 }
             }
             else
@@ -516,10 +532,15 @@ class MatchController extends Controller
                 if ($user->account->balance < $contest->entry_fees) 
                 {
                     $amountFromWinnings = $contest->entry_fees - $user->account->balance;
+
                     $user->account->winning -= $amountFromWinnings;
+                    $winning = $amountFromWinnings;
+
+                    $balance = $user->account->balance;
                     $user->account->balance = 0;
                 } else {
                     $user->account->balance -= $contest->entry_fees;
+                    $balance = $contest->entry_fees;
                 }
             }
 
@@ -538,8 +559,9 @@ class MatchController extends Controller
             'user_id' => $user->id,
             'contest_id' => $request->contest_id,
             'created_team_id' => $request->team_id,
-            'entryfee_bonus' => $deductBonus,
-            'entryfee_deposit' => $contest->entry_fees,
+            'entryfee_winning' => $winning,
+            'entryfee_bonus' => $bonus,
+            'entryfee_deposit' => $balance,
         ]);
 
         $contest->filled_spot += 1;

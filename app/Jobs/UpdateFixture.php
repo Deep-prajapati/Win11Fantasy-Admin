@@ -192,7 +192,9 @@ class UpdateFixture implements ShouldQueue
                                         continue;
                                     }
 
-                                    $wallet->bonus += $contest->entry_fees;
+                                    $wallet->bonus += $joinContest->entryfee_bonus;
+                                    $wallet->balance += $joinContest->entryfee_deposit;
+                                    $wallet->winning += $joinContest->entryfee_winning;
                                     $wallet->save();
 
                                     Transection::create([
@@ -204,6 +206,12 @@ class UpdateFixture implements ShouldQueue
                                 }
                             }
 
+                            Fixture::updateOrCreate([
+                                'fixture_id' => $data['id']
+                            ], [
+                                'is_prize_refund' => true,
+                            ]);
+                            
                             Log::info([
                                 'status' => 'success',
                                 'Job' => 'UpdateFixture',

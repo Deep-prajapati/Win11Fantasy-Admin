@@ -218,7 +218,9 @@
                                     <th>Filled Spots</th>
                                     <th>Empty Spots</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                    @if($contest->contestType->cancellable == 'true')
+                                        <th>Actions</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody class="table-border-bottom-0">
@@ -247,9 +249,15 @@
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            <button type="button" class="btn btn-outline-danger">
-                                                <i class="tf-icons bx bx-trash"></i>
-                                            </button>
+                                            @if($contest->contestType->cancellable == 'true' && $data->is_cancelled == 0 && $data->starting_at > now()->format('Y-m-d H:i:s'))
+                                                <form action="{{ route('admin.cricket.default.contest.cancel') }}" method="post">
+                                                    @csrf
+                                                    <input type="hidden" name="contest_id" value="{{ $data->id }}">
+                                                    <button type="submit" class="btn btn-outline-danger">
+                                                        <i class="tf-icons bx bx-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

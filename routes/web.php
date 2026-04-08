@@ -85,6 +85,7 @@ Route::group(['as' => 'admin.'], function ()
             {
                 Route::get('/', [CricketController::class, 'defaultContest'])->name('index');
                 Route::get('/{contest_id}/view', [CricketController::class, 'defaultContestView'])->name('view');
+                Route::post('/cancel', [CricketController::class, 'defaultContestCancel'])->name('cancel');
                 Route::match(['get', 'post'],'/{contest_id}/edit', [CricketController::class, 'defaultContestEdit'])->name('edit');
                 Route::match(['get', 'post'], '/add', [CricketController::class, 'defaultContestAdd'])->name('add');
             });
@@ -130,8 +131,8 @@ Route::group(['as' => 'admin.'], function ()
     });
 });
 
-Route::get('refund/fdcgry/{id}', function($id){
-    
+Route::get('refund/fdcgry/{id}', function($id)
+{
     try {
         $match = Fixture::where('fixture_id', $id)->first();
 
@@ -161,7 +162,9 @@ Route::get('refund/fdcgry/{id}', function($id){
                     continue;
                 }
 
-                $wallet->bonus += $contest->entry_fees;
+                $wallet->bonus += $joinContest->entryfee_bonus;
+                $wallet->balance += $joinContest->entryfee_deposit;
+                $wallet->winning += $joinContest->entryfee_winning;
                 $wallet->save();
 
                 Transection::create([
@@ -172,6 +175,12 @@ Route::get('refund/fdcgry/{id}', function($id){
                 ]);
             }
         }
+
+        Fixture::updateOrCreate([
+            'fixture_id' => $match->fixture_id
+        ], [
+            'is_prize_refund' => true,
+        ]);
 
         Log::info([
             'status' => 'success',

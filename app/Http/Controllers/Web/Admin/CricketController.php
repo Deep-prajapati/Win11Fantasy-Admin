@@ -16,7 +16,11 @@ use App\Models\JoinCrickContest;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Playerspoint;
+use App\Models\Transection;
+use App\Models\User;
 use App\Models\UserTeam;
+use App\Models\UserWallet;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class CricketController extends Controller
@@ -191,25 +195,30 @@ class CricketController extends Controller
     public function defaultContestView(Request $request, $contest_id)
     {
         $title = "Default Contest View";
+
         $contest = DefaultContest::where('id', $contest_id)->first();
-        if (!$contest) {
+
+        if (!$contest) 
+        {
             flash()->error('Invalid Contest details.');
             return redirect()->route('admin.cricket.default.contest.index');
         }
+
         $contest->load('contestType', 'prizeBreakup');
-        // return $contest;
-        $usercontests = Contest::query()
-            ->where('default_contest_id', $contest->id)
-            ->join('fixtures', 'fixtures.fixture_id', '=', 'contests.match_id');
+        
+        $usercontests = Contest::query()->where('default_contest_id', $contest->id)->join('fixtures', 'fixtures.fixture_id', '=', 'contests.match_id');
 
         // Filter by Date
-        if (!empty($request->date)) {
+        if (!empty($request->date)) 
+        {
             $usercontests->whereDate('fixtures.starting_at', $request->date);
         }
 
         // Filter by Status
-        if (!empty($request->status)) {
-            switch ($request->status) {
+        if (!empty($request->status)) 
+        {
+            switch ($request->status) 
+            {
                 case 'upcomming':
                     $usercontests->where(function ($query) {
                         $query->where('fixtures.starting_at', '>', now())
@@ -238,13 +247,75 @@ class CricketController extends Controller
             }
         }
 
-        if (isset($request->match_id)) {
+        if (isset($request->match_id)) 
+        {
             $usercontests = $usercontests->where('contests.match_id', $request->match_id);
         }
+
         $usercontests = $usercontests->orderBy('fixtures.starting_at', 'desc') // Order by match starting_at
             ->select('contests.*', 'fixtures.fixture_id', 'fixtures.starting_at', 'fixtures.status as match_status') // Select only
             ->paginate(env('PER_PAGE_RECORDS', 10));
+            // dd($contest , $usercontests);
         return view('cricket.contests.view', compact('title', 'contest', 'usercontests'));
+    }
+
+    public function defaultContestCancel(Request $request)
+    {
+        $rules = [
+            'contest_id' => 'required|integer|exists:contests,id',
+        ];
+
+        $request->validate($rules);
+
+        $contest = Contest::where('id', $request->contest_id)->with('match')->first();
+
+        if (!$contest) 
+        {
+            flash()->error('Invalid Contest details.');
+            return redirect()->route('admin.cricket.default.contest.view', $contest->default_contest_id);
+        }
+        
+        $contest->update(['is_cancelled' => 1]);
+
+        try {
+            $users = JoinCrickContest::where('contest_id' , $contest->id)->with('contest')->get()->pluck('user_id')->unique();
+            
+            foreach ($users as $user_id) 
+            {
+                $user = User::find($user_id);
+
+                $contests = JoinCrickContest::where(['contest_id' => $contest->id, 'user_id' => $user_id])->with('contest')->get();
+
+                foreach ($contests as $joinContest) 
+                {
+                    $wallet = UserWallet::where('user_id', $user_id)->first();
+
+                    if(!$wallet) 
+                    {
+                        Log::warning('No wallet found for user_id: ' . $user_id . '. Skipping refund for this user.');
+                        continue;
+                    }
+
+                    $wallet->bonus += $joinContest->entryfee_bonus;
+                    $wallet->balance += $joinContest->entryfee_deposit;
+                    $wallet->winning += $joinContest->entryfee_winning;
+                    $wallet->save();
+
+                    Transection::create([
+                        'user_id' => $user->id,
+                        'type' => 1,
+                        'amount' => $contest->entry_fees,
+                        'desc' => 'Refund | For Cancelation of | ' . $contest->contestType->name . ' | ' . $contest->match->localteam_code . ' - ' . $contest->match->visitorteam_code,
+                    ]);
+                }
+            }
+
+            flash()->success('Contest Cancelled.');
+            return redirect()->route('admin.cricket.default.contest.view', $contest->default_contest_id);
+        } catch (\Throwable $th) {
+            flash()->error('Something went wrong.');
+            return redirect()->route('admin.cricket.default.contest.view', $contest->default_contest_id);
+        }
     }
 
     public function defaultContestEdit(Request $request, $contest_id)
