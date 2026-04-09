@@ -7,6 +7,7 @@ use App\Models\Transection;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UsersController extends Controller
 {
@@ -15,6 +16,11 @@ class UsersController extends Controller
         $title = "User List";
         // $users = User::where('role', '2')->paginate(env('PER_PAGE_RECORDS', 10));
         return view('users.index', compact('title'));
+    }
+
+    public function ExportCsv()
+    {
+        return Excel::download(new User, 'User-List-' . now()->format('d-m-Y') . '.csv');
     }
 
     public function botsUser(Request $request)

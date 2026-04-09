@@ -26,7 +26,16 @@
                         </select>
                     </div>
                 </div>
-                <button type="button" wire:click="clearFilters" class="btn btn-sm btn-outline-danger">Clear</button>
+                <div class="row">
+                    <div class="col-sm-2 mb-4">
+                        <button type="button" class="btn btn-primary" wire:click="ExportCsv">Export</button>
+                    </div>
+
+                    <div class="col-sm-2 mb-4">
+                        <button type="button" wire:click="clearFilters" class="btn btn-sm btn-outline-danger">Clear</button>
+                    </div>
+                </div>
+                
             </div>
             <div class="table-responsive text-nowrap">
                 <table class="table table-striped">

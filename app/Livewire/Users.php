@@ -2,11 +2,13 @@
 
 namespace App\Livewire;
 
+use App\Exports\UserExport;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Flasher\Laravel\Facade\Flasher;
 use Livewire\WithoutUrlPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
 class Users extends Component
 {
@@ -49,6 +51,12 @@ class Users extends Component
         Flasher::success('User unblocked successfully.');
         $this->dispatch('refreshComponent');
     }
+
+    public function ExportCsv()
+    {
+        return Excel::download(new UserExport, 'User-List-' . now()->format('d-m-Y') . '.csv');
+    }
+
     public function blockUser($user_id){
         $user = User::where(['id' => $user_id, 'role' => 2, 'is_banned' => false])->first();
         if (!$user) {

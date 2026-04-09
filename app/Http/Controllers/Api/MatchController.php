@@ -461,7 +461,7 @@ class MatchController extends Controller
         
         $winning = 0;
         $balance = 0;
-        $winning = 0;
+        $bonus = 0;
 
         if (!$contest->defaultContest->is_free) 
         {

@@ -38,6 +38,7 @@ Route::group(['as' => 'admin.'], function ()
         Route::group(['prefix' => 'users', 'as' => 'users.'], function () 
         {
             Route::get('/', [UsersController::class, 'index'])->name('list');
+            Route::get('/export-csv', [UsersController::class, 'ExportCsv'])->name('export-csv');
             Route::get('{user_id}/view', [UsersController::class, 'view'])->name('view');
             Route::match(['get','post'],'{user_id}/wallet', [UsersController::class, 'wallet'])->name('wallet');
             Route::post('{user_id}/update', [UsersController::class, 'Update'])->name('update');
