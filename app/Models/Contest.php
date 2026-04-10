@@ -71,7 +71,7 @@ class Contest extends Model
     }
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where(['is_active' => true , 'is_cancelled' => 0]);
     }
     function userJoinedContests()
     {
