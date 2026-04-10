@@ -125,18 +125,24 @@ class CricketController extends Controller
 
     public function matchContestView(Request $request, $fixture_id, $contest_id)
     {
+        $title = "Match Contest View";
+
         $match =  Fixture::where('fixture_id', $fixture_id)->first();
-        if (!$match) {
+
+        if (!$match) 
+        {
             flash()->error('Match not found.');
             return redirect()->route('admin.cricket.matches');
         }
 
         $contest = Contest::where(['match_id' => $fixture_id, 'id' => $contest_id])->first();
-        $title = "Match Contest View";
+        
         $joinedUsers = JoinCrickContest::where(['match_id' => $fixture_id, 'contest_id' => $contest_id])->orderby('ranks')->with('user')->paginate(env('PER_PAGE_RECORDS', 10)); //'team'
+
         $totalEntryAmount = JoinCrickContest::where(['match_id' => $fixture_id, 'contest_id' => $contest_id])->whereHas('user', function ($query) {
             $query->where('role', 2);
         })->count() * $contest->entry_fees;
+        
         $totalWinnings = JoinCrickContest::where(['match_id' => $fixture_id, 'contest_id' => $contest_id])->whereHas('user', function ($query) {
             $query->where('role', 2);
         })->sum('winning_amount');

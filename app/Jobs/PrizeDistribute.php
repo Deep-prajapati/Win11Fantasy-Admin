@@ -45,11 +45,13 @@ class PrizeDistribute implements ShouldQueue
                         if($contest->is_felexible)
                         {
                             $lastRankUpto = $contest->prizeBreakups->last()->rank_upto;
-                            $JoindContest = JoinCrickContest::where(['match_id' => $match->fixture_id, 'contest_id' => $contest->id])
-                            ->with('user')->where('ranks', '<=', $lastRankUpto)
+                            
+                            $query = JoinCrickContest::where(['match_id' => $contest->match_id, 'contest_id' => $contest->id]);
+                            $totaluserjoined = $query->count();
+                            $JoindContest = $query->with('user')->where('ranks', '<=', $lastRankUpto)
                             ->orderBy('ranks', 'asc')->get();
                             
-                            $totaljoined = count($JoindContest) * $contest->entry_fees;
+                            $totaljoined = $totaluserjoined * $contest->entry_fees;
                             
                             foreach($JoindContest as $key => $data) 
                             {
@@ -164,9 +166,9 @@ class PrizeDistribute implements ShouldQueue
                 ->where('rank_upto', '>=', $rank)
                 ->sum('prize_amount');
 
-            return $prizePool / $sameRankCount;
+            return (($prizePool / $sameRankCount) / 100) * $totaljoined;
         }
-        // return $prizeTier['prize_amount'];
+        
         return ($prizeTier['prize_amount'] / 100) * $totaljoined;
     }
 }

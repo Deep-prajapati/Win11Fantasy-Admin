@@ -53,8 +53,13 @@
                     <div class="card-title d-flex align-items-start justify-content-between">
                     </div>
                     <span class="fw-semibold d-block mb-1">Total winning prize</span>
-                    <h3 class="card-title mb-2">&#8377; {{ number_format($contest->total_winning_prize, 2) }}</h3>
-                    {{-- <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> +72.80%</small> --}}
+                    <h3 class="card-title mb-2">
+                        @if($contest->is_felexible)
+                            &#8377; {{ number_format($contest->entry_fees * $contest->filled_spot, 2) }}
+                        @else
+                            &#8377; {{ number_format($contest->total_winning_prize, 2) }}
+                        @endif
+                    </h3>
                 </div>
             </div>
         </div>

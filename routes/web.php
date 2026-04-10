@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\Admin\DashboardController;
 use App\Http\Controllers\Web\Admin\Football\MatchesController as FMController;
 use App\Http\Controllers\Web\Admin\Football\ContestController as FMContestController;
 use App\Http\Controllers\Web\Admin\WithdrawlController;
+use App\Models\Contest;
 use App\Models\Fixture;
 use App\Models\JoinCrickContest;
 use App\Models\Transection;
@@ -204,3 +205,101 @@ Route::get('refund/fdcgry/{id}', function($id)
         return 'Failed to refund entry fees for cancelled match - ' . $th->getMessage();
     }
 });
+
+// Route::get('test/{id}', function($id)
+// {
+//     try {
+//         $contests = Contest::where(['id' => $id])->with('prizeBreakups')->get();
+
+//         foreach ($contests as $contest) 
+//         {
+//             if (isset($contest->prizeBreakups)) 
+//             {
+//                 if($contest->is_felexible)
+//                 {
+//                     $lastRankUpto = $contest->prizeBreakups->last()->rank_upto;
+
+//                     $query = JoinCrickContest::where(['match_id' => $contest->match_id, 'contest_id' => $contest->id]);
+//                     $totaluserjoined = $query->count();
+//                     $JoindContest = $query->with('user')->where('ranks', '<=', $lastRankUpto)
+//                     ->orderBy('ranks', 'asc')->get();
+                    
+//                     $totaljoined = $totaluserjoined * $contest->entry_fees;
+                    
+//                     foreach($JoindContest as $key => $data) 
+//                     {
+//                         $amount = flexiablePrizeForRank($data->ranks, $contest->prizeBreakups, $contest->match_id, $contest->id, $totaljoined);
+//                         dd($amount);
+//                         $data->winning_amount = round($amount, 2);
+//                         $data->update();
+//                         if ($data->user->role == 2) {
+//                             UserWallet::where('user_id', $data->user_id)->increment('winning', $amount);
+//                             Transection::create([
+//                                 'user_id' => $data->user_id,
+//                                 'type' => 1,
+//                                 'amount' => $amount,
+//                                 'desc' => 'Contest winning | ' . $match->localteam_code . ' - ' . $match->visitorteam_code,
+//                             ]);
+//                         }
+//                     }
+//                 }else{
+//                     dd('Not Felexible');
+//                     $lastRankUpto = $contest->prizeBreakups->last()->rank_upto;
+//                     $JoindContest = JoinCrickContest::where(['match_id' => $match->fixture_id, 'contest_id' => $contest->id])
+//                     ->with('user')->where('ranks', '<=', $lastRankUpto)
+//                     ->orderBy('ranks', 'asc')->get();
+
+//                     foreach ($JoindContest as $key => $data) 
+//                     {
+//                         $amount = $this->PrizeForRank($data->ranks, $contest->prizeBreakups, $match->fixture_id, $contest->id);
+//                         $data->winning_amount = round($amount, 2);
+//                         $data->update();
+//                         if ($data->user->role == 2) {
+//                             UserWallet::where('user_id', $data->user_id)
+//                                 ->increment('winning', $amount);
+//                             Transection::create([
+//                                 'user_id' => $data->user_id,
+//                                 'type' => 1,
+//                                 'amount' => $amount,
+//                                 'desc' => 'Contest winning | ' . $match->localteam_code . ' - ' . $match->visitorteam_code,
+//                             ]);
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//         dd('done');
+//     } catch (\Throwable $th) {
+//         return 'Failed - ' . $th->getMessage();
+//     }
+// });
+
+// function flexiablePrizeForRank($rank, $prizeBreakups, $match, $contest, $totaljoined)
+// {  
+//     $prizeTier = collect($prizeBreakups)->first(function ($prize) use ($rank) {
+//         return $rank >= $prize['rank_from'] && $rank <= $prize['rank_upto'];
+//     });
+    
+//     if (!$prizeTier) 
+//     {
+//         return 0;
+//     }
+
+//     $sameRankCount = JoinCrickContest::where([
+//         'match_id' => $match,
+//         'contest_id' => $contest,
+//         'ranks' => $rank
+//     ])->count();
+
+//     if ($sameRankCount > 1) 
+//     {
+//         $prizePool = collect($prizeBreakups)
+//             ->where('rank_from', '<=', $rank)
+//             ->where('rank_upto', '>=', $rank)
+//             ->sum('prize_amount');
+        
+//         return (($prizePool / $sameRankCount) / 100) * $totaljoined;
+//     }
+    
+//     return ($prizeTier['prize_amount'] / 100) * $totaljoined;
+// }
