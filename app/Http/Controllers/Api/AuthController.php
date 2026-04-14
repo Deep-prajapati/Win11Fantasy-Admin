@@ -12,6 +12,7 @@ use App\Models\SiteSettings;
 use App\Models\Transection;
 use App\Services\OtpLessService;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -44,6 +45,14 @@ class AuthController extends Controller
         
         if ($validator->fails()) 
         {
+            Log::error([
+                'Status' => 'error',
+                'File' => 'AuthController.php',
+                'Message' => 'Validation Error',
+                'Method' => 'Login',
+                'Error' => $validator->errors(),
+            ]);
+
             return Helper::FalseReturn(null, $validator->errors()->first());
         }
 
@@ -125,17 +134,33 @@ class AuthController extends Controller
                 $payload
             );
 
-            if ($response->successful()) {
+            if ($response->successful()) 
+            {
                 $data = $response->json();
-
-                // example: wamid
-                // $messageId = $data['messages'][0]['id'] ?? null;
                 
                 return Helper::SuccessReturn(null, 'Otp send on you mobile number.');
             } else {
+                Log::error([
+                    'Status' => 'error',
+                    'File' => 'AuthController.php',
+                    'Message' => 'Whatsapp API Error',
+                    'Method' => 'Login',
+                    'Error' => $response->json(),
+                    'data' => $request->username,
+                ]);
+                
                 return Helper::EmptyReturn('Invalid mobile number. Please check your mobile number.');
             }
         } catch (\Throwable $th) {
+            Log::error([
+                'Status' => 'error',
+                'File' => 'AuthController.php',
+                'Message' => 'Error Catched',
+                'Method' => 'Login',
+                'Error' => $th->getMessage(),
+                'data' => $request->username,
+            ]);
+
             return Helper::EmptyReturn('Invalid mobile number. Please check your mobile number.');
         }
 
@@ -151,28 +176,73 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(), $rules);
 
-        if ($validator->fails()) {
+        if ($validator->fails()) 
+        {
+            Log::error([
+                'Status' => 'error',
+                'File' => 'AuthController.php',
+                'Message' => 'Validation Error',
+                'Method' => 'otpVerify',
+                'Error' => $validator->errors(),
+            ]);
+
             return Helper::FalseReturn(null, $validator->errors()->first());
         }
 
         $user = User::where('mobile_number', $request->mobile)->first();
 
-        if (!$user) {
+        if (!$user) 
+        {
+            Log::error([
+                'Status' => 'error',
+                'File' => 'AuthController.php',
+                'Message' => 'User not found',
+                'Method' => 'otpVerify',
+                'data' => $request->mobile,
+            ]);
+
             return Helper::EmptyReturn('Invalid user details');
         }
 
         // ✅ Check OTP exists
-        if (!$user->otp_token) {
+        if (!$user->otp_token) 
+        {
+            Log::error([
+                'Status' => 'error',
+                'File' => 'AuthController.php',
+                'Message' => 'OTP not exists',
+                'Method' => 'otpVerify',
+                'data' => json_decode($user),
+            ]);
+
             return Helper::EmptyReturn('OTP not found. Please request again.');
         }
 
         // ✅ Check OTP match
-        if ($user->otp_token != $request->otp) {
+        if ($user->otp_token != $request->otp) 
+        {
+            Log::error([
+                'Status' => 'error',
+                'File' => 'AuthController.php',
+                'Message' => 'Otp not match',
+                'Method' => 'otpVerify',
+                'data' => json_decode($user),
+            ]);
+
             return Helper::EmptyReturn('Invalid OTP.');
         }
 
         // ✅ Check Expiry
-        if ($user->otp_expired_at && now()->gt($user->otp_expired_at)) {
+        if ($user->otp_expired_at && now()->gt($user->otp_expired_at)) 
+        {
+            Log::error([
+                'Status' => 'error',
+                'File' => 'AuthController.php',
+                'Message' => 'Otp expired',
+                'Method' => 'otpVerify',
+                'data' => json_decode($user),
+            ]);
+
             return Helper::EmptyReturn('OTP expired. Please request again.');
         }
 
@@ -221,6 +291,15 @@ class AuthController extends Controller
             );
 
         } catch (\Throwable $th) {
+            Log::error([
+                'Status' => 'error',
+                'File' => 'AuthController.php',
+                'Message' => 'Error Catched',
+                'Method' => 'otpVerify',
+                'Error' => $th->getMessage(),
+                'data' => json_decode($user),
+            ]);
+
             return Helper::FalseReturn(null, 'Something went wrong. Please try again.');
         }
     }

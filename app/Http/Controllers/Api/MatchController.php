@@ -214,7 +214,7 @@ class MatchController extends Controller
             ]);
         }
 
-        if ($fixture->status == 'live' || $fixture->is_live) 
+        if (($fixture->is_live == true || $fixture->is_cancelled == true || $fixture->is_completed == true) || Carbon::now()->gte(Carbon::parse($fixture->starting_at)->subMinute())) 
         {
             return Helper::FalseReturn(null, 'You cannot create team now. Match already live.');
         }
@@ -273,14 +273,15 @@ class MatchController extends Controller
     {
         $fixture = Fixture::where('fixture_id', $fixture_id)->first();
         
-        if (!$fixture) {
+        if (!$fixture) 
+        {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid request',
             ]);
         }
 
-        if ($fixture->is_live == true || $fixture->is_cancelled == true || $fixture->is_completed == true) 
+        if (($fixture->is_live == true || $fixture->is_cancelled == true || $fixture->is_completed == true) || Carbon::now()->gte(Carbon::parse($fixture->starting_at)->subMinute())) 
         {
             return Helper::FalseReturn(null, 'You cannot update team now.');
         }
