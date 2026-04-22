@@ -107,17 +107,22 @@
 @livewireScripts()
 <script>
     $(document).ready(function() {
-        $('#addMoreContest').on('click', function() {
+        $('#addMoreContest').on('click', function() 
+        {
             $('#modalAddMoreContest').modal('show');
         });
-        $('#addContestBtn').on('click', function() {
+
+        $('#addContestBtn').on('click', function() 
+        {
             let selectedValues = [];
 
             $('.contest-checkbox:checked').each(function() {
                 selectedValues.push($(this).val());
             });
+
             let url = "{{ route('admin.cricket.match.contests.add', $match->fixture_id) }}";
             let csrfToken = $('meta[name="csrf-token"]').attr('content');
+
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -125,15 +130,18 @@
                     _token: csrfToken,
                     contests: selectedValues
                 },
-                success: function(response) {
-                    if (response.success) {
+                success: function(response) 
+                {
+                    if (response.success) 
+                    {
                         alert(response.message);
                         window.location.reload();
                     } else {
                         alert(response.message);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function(xhr, status, error) 
+                {
                     console.error("Error:", xhr.responseText);
                     alert("Something went wrong. Please try again.");
                 }

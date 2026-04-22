@@ -80,7 +80,7 @@ class AuthController extends Controller
                 $user->email = $credentials['email'] ?? null;
                 $user->otp_expired_at = $expiredAt;
                 $user->otp_token = $otp;
-                $user->ref_code = $request->invite_token ?? '';
+                $user->ref_code = User::where('invite_code' ,$request->invite_token)->exists() ? $request->invite_token ?? null : null;
                 $user->save();
 
                 UserWallet::create([

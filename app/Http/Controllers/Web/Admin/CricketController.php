@@ -53,37 +53,50 @@ class CricketController extends Controller
     public function matchContests(Request $request, $fixture_id)
     {
         $match =  Fixture::where('fixture_id', $fixture_id)->first();
-        if (!$match) {
+
+        if (!$match) 
+        {
             flash()->error('Match not found.');
             return redirect()->route('admin.cricket.matches');
         }
+
         $title = "Match Contests List";
+
         $match->load('league');
+
         $alreadyContest = Contest::where('match_id', $fixture_id)->pluck("default_contest_id");
         $moreContests = DefaultContest::where(['is_cloneable' => false])->whereNotin('id', $alreadyContest)->with('contestType')->get();
+        
         return view('cricket.matches.contest_list', compact('title', 'match', 'moreContests'));
     }
 
     public function matchContestAddManual(Request $request, $fixture_id)
     {
         $match =  Fixture::where('fixture_id', $fixture_id)->first();
-        if (!$match) {
+
+        if (!$match) 
+        {
             return Helper::FalseReturn('Invalid Match Id');
         }
+
         $rules = [
             'contests' => ['required', 'array'],
             'contests.*' => ['required', Rule::exists('default_contests', 'id')]
         ];
+
         $validator = Validator::make($request->all(), $rules);
-        if ($validator->fails()) {
+
+        if ($validator->fails()) 
+        {
             return Helper::EmptyReturn($validator->errors()->first());
         }
-        $defContests = DefaultContest::whereIn('id', $request->contests)
-            ->where('is_deleted', '!=', 1)
-            ->get();
 
-        DB::transaction(function () use ($defContests, $fixture_id) {
-            foreach ($defContests as $contest) {
+        $defContests = DefaultContest::whereIn('id', $request->contests)->where('is_deleted', '!=', 1)->get();
+
+        DB::transaction(function () use ($defContests, $fixture_id) 
+        {
+            foreach ($defContests as $contest) 
+            {
                 $contests[] = [
                     'match_id' => $fixture_id,
                     'contest_type' => $contest->contest_type,
@@ -99,10 +112,12 @@ class CricketController extends Controller
                     'is_free' => $contest->is_free,
                     'usable_bonus' => $contest->usable_bonus,
                     'is_cancelable' => $contest->is_cancelable ?? 0,
+                    'is_felexible' => $contest->is_felexible,
                     'is_active' => $contest->deleted_at === null,
                     'deleted_at' => null
                 ];
             }
+
             Contest::upsert($contests, ['match_id', 'default_contest_id'], [
                 'total_winning_prize',
                 'mrp',
@@ -115,11 +130,13 @@ class CricketController extends Controller
                 'is_free',
                 'usable_bonus',
                 'is_cancelable',
+                'is_felexible',
                 'is_active',
                 'updated_at',
                 'deleted_at'
             ]);
         });
+
         return Helper::SuccessReturn(null, 'Contest added successfully.');
     }
 

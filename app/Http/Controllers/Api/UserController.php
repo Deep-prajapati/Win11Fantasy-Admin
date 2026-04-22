@@ -21,6 +21,7 @@ class UserController extends Controller
         $user->load('account');
         return Helper::SuccessReturn($user, 'User profile fatched successfully.');
     }
+
     public function profileUpdate(Request $request)
     {
         $user = auth()->user();
@@ -174,12 +175,14 @@ class UserController extends Controller
         $user->account->save();
         return Helper::SuccessReturn($user, 'Your profile updated successfully.');
     }
+
     public function transaction(Request $request)
     {
         $user = auth()->user();
         $tnx = Transection::where("user_id", $user->id)->orderby('created_at', 'desc')->get();
         return Helper::SuccessReturn($tnx, 'Data fatched');
     }
+
     public function leaderboard()
     {
         // fake leaderboard working
